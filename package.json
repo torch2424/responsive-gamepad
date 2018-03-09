@@ -4,13 +4,16 @@
   "description": "Handle Keyboard, Gamepad, and Touch Controls under a single API",
   "main": "index.js",
   "scripts": {
-    "start": "npx concurrently --kill-others --names \"DEBUGGER,WASM,LIB\" -c \"bgBlue.bold,bgMagenta.bold,bgGreen.bold\" \"npm run debugger:watch\" \"npm run wasm:watch\" \"npm run lib:watch\"",
-    "dev": "",
-    "demo": "",
-    "demo:serve": "",
-    "demo:build": "",
+    "start": "npx concurrently --kill-others --names \"DEMO,LIB\" -c \"bgBlue.bold,bgGreen.bold\" \"npm run demo:watch\" \"npm run lib:watch\"",
+    "dev": "npm run -s demo:serve",
+    "demo": "if-env NODE_ENV=production && npm run -s demo:build:serve || npm run -s demo:watch",
+    "demo:serve": "npm run demo:watch",
+    "demo:watch": "preact watch",
+    "demo:build": "preact build",
+    "demo:build:serve": "preact build && preact serve",
+    "lint": "eslint src",
     "lib:watch": "",
-    "lib:build"
+    "lib:build": "",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -36,5 +39,21 @@
   "bugs": {
     "url": "https://github.com/torch2424/responsive-gamepad/issues"
   },
-  "homepage": "https://github.com/torch2424/responsive-gamepad#readme"
+  "homepage": "https://github.com/torch2424/responsive-gamepad#readme",
+  "eslintConfig": {
+    "extends": "eslint-config-synacor"
+  },
+  "eslintIgnore": [
+    "build/*"
+  ],
+  "dependencies": {
+    "preact": "^8.2.1",
+    "preact-compat": "^3.17.0"
+  },
+  "devDependencies": {
+    "eslint": "^4.5.0",
+    "eslint-config-synacor": "^1.1.0",
+    "if-env": "^1.0.0",
+    "preact-cli": "^2.0.0"
+  }
 }
