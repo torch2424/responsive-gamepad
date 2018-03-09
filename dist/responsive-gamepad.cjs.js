@@ -23,7 +23,8 @@ var touchInputSchema = {
   ELEMENT: undefined,
   TYPE: undefined,
   DIRECTION: undefined,
-  EVENT_HANDLER: undefined
+  EVENT_HANDLER: undefined,
+  BOUNDING_RECT: undefined
 
   // Define our finaly kerboard schema here
 };var keyMapSchema = {
@@ -99,6 +100,10 @@ function getTouchInput(element, type, direction, eventHandler) {
   input.TYPE = type;
   input.DIRECTION = direction;
   input.EVENT_HANDLER = eventHandler;
+
+  // Add our bounding rect
+  var boundingRect = input.ELEMENT.getBoundingClientRect();
+  input.BOUNDING_RECT = boundingRect;
 
   // Define our eventListener functions
   var eventListenerCallback = function eventListenerCallback(event) {
@@ -289,6 +294,11 @@ var ResponsiveGamepadService = function () {
         _this.updateKeyboard(event);
       });
 
+      // Add a resize listen to update the gamepad rect on resize
+      window.addEventListener("resize", function () {
+        _this.updateTouchpadRect();
+      });
+
       if (keyMap) {
         this.keyMap = keyMap;
       }
@@ -302,7 +312,7 @@ var ResponsiveGamepadService = function () {
       // TODO: May have to add the event handler after getting the input
       var touchInput = void 0;
       touchInput = getTouchInput(element, type, direction, function (event) {
-        _this2.updateVirtualGamepad(touchInput, event);
+        _this2.updateTouchpad(keyMapKey, touchInput, event);
       });
 
       // Add the input to our keymap
@@ -433,16 +443,78 @@ var ResponsiveGamepadService = function () {
         if (_ret === 'continue') continue;
       }
     }
+
+    // Function to update button position and size
+
   }, {
-    key: 'updateVirtualGamepad',
-    value: function updateVirtualGamepad(touchInput, event) {
+    key: 'updateTouchpadRect',
+    value: function updateTouchpadRect() {
+      var _this6 = this;
+
+      // Read from the DOM, and get each of our elements position, doing this here, as it is best to read from the dom in sequence
+      // use element.getBoundingRect() top, bottom, left, right to get clientX and clientY in touch events :)
+      // https://stackoverflow.com/questions/442404/retrieve-the-position-x-y-of-an-html-element
+      //console.log("GamepadComponent: Updating Rect()...");
+      this.keyMapKeys.forEach(function (key) {
+        _this6.keyMap[key].TOUCHPAD.forEach(function (touchInput, index) {
+          var boundingRect = _this6.keyMap[key].TOUCHPAD[index].ELEMENT.getBoundingClientRect();
+          _this6.keyMap[key].TOUCHPAD[index].BOUNDING_RECT = boundingRect;
+        });
+      });
+    }
+  }, {
+    key: 'resetTouchDpad',
+    value: function resetTouchDpad() {
+      var _this7 = this;
+
+      var dpadKeys = ['UP', 'RIGHT', 'DOWN', 'LEFT'];
+
+      dpadKeys.forEach(function (dpadKey) {
+        _this7.keyMap[dpadKey].TOUCHPAD.forEach(function (touchInput) {
+          touchInput.ACTIVE = false;
+        });
+      });
+    }
+  }, {
+    key: 'updateTouchpad',
+    value: function updateTouchpad(keyMapKey, touchInput, event) {
+      if (!event || event.type.includes('touch') && !event.touches) return;
+
+      //event.stopPropagation();
+      event.preventDefault();
+
       // Function called on touch event
       console.log('Random ID: ' + Math.random() + ' Touch event:', touchInput, event);
+
+      //this.debugCurrentTouch(event);
+
+      // Check for active event types
+      if (event.type === "touchstart" || event.type === "touchmove" || event.type === "mousedown") {
+        // Active
+
+        // TODO: Dpad Type
+
+        // TODO: Button Type
+      } else {
+        // Not active
+
+        // Handle Dpad Type
+        if (touchInput.TYPE === 'DPAD') {
+          this.resetTouchDpad();
+        }
+
+        // TODO: Button Type
+      }
     }
   }]);
   return ResponsiveGamepadService;
 }();
 
+// Exports
+
+
 var ResponsiveGamepad = new ResponsiveGamepadService();
 
 exports.ResponsiveGamepad = ResponsiveGamepad;
+exports.DEFAULT_KEYMAP = KEYMAP;
+exports.GAMEBOY_KEYMAP = KEYMAP;

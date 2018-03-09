@@ -1,13 +1,13 @@
 import './style';
 import { Component } from 'preact';
-import { ResponsiveGamepad } from './dist/responsive-gamepad.esm';
+import { ResponsiveGamepad, DEFAULT_KEYMAP } from './dist/responsive-gamepad.esm';
 
 export default class App extends Component {
 
 	// Using componentDidMount to wait for the canvas element to be inserted in DOM
 	componentDidMount() {
     // Initialize our gamepad
-		ResponsiveGamepad.initialize();
+		ResponsiveGamepad.initialize(DEFAULT_KEYMAP);
 
 		// Add our touch inputs
 		const dpadElement = document.getElementById('gamepadDpad');
