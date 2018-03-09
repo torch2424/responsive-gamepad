@@ -16,3 +16,5 @@ https://css-tricks.com/snippets/javascript/javascript-keycodes/
 https://material.io/icons/#ic_gamepad
 
 https://github.com/torch2424/picoDeploy/tree/master/src/components/gamepad
+
+https://github.com/torch2424/picoDeploy/blob/master/src/components/gamepad/gamepad.ts
