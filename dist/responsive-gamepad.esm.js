@@ -64,12 +64,15 @@ function getKeyInput(keyCode) {
 
 function getGamepadInput(gamepadButtonId, axisId, axisIsPositive) {
   var input = Object.assign({}, gamepadInputSchema);
+  input.JOYSTICK = Object.assign({}, gamepadInputSchema.JOYSTICK);
   if (gamepadButtonId || gamepadButtonId === 0) {
     input.BUTTON_ID = gamepadButtonId;
   } else if (axisId !== undefined && axisIsPositive !== undefined) {
+    console.log(axisId, axisIsPositive);
     input.JOYSTICK.AXIS_ID = axisId;
     input.JOYSTICK.IS_POSITIVE = axisIsPositive;
   }
+  console.log(input);
   return input;
 }
 
@@ -165,26 +168,26 @@ keymap.A.GAMEPAD.push(getGamepadInput(0));
 keymap.A.GAMEPAD.push(getGamepadInput(1));
 
 // B
-keymap.A.KEYBOARD.push(getKeyInput(Key.Z));
-keymap.A.KEYBOARD.push(getKeyInput(Key.ESCAPE));
-keymap.A.KEYBOARD.push(getKeyInput(Key.SINGLE_QUOTE));
-keymap.A.KEYBOARD.push(getKeyInput(Key.BACKSPACE));
-keymap.A.KEYBOARD.push(getKeyInput(Key.NUMPAD_9));
-keymap.A.GAMEPAD.push(getGamepadInput(2));
-keymap.A.GAMEPAD.push(getGamepadInput(3));
+keymap.B.KEYBOARD.push(getKeyInput(Key.Z));
+keymap.B.KEYBOARD.push(getKeyInput(Key.ESCAPE));
+keymap.B.KEYBOARD.push(getKeyInput(Key.SINGLE_QUOTE));
+keymap.B.KEYBOARD.push(getKeyInput(Key.BACKSPACE));
+keymap.B.KEYBOARD.push(getKeyInput(Key.NUMPAD_9));
+keymap.B.GAMEPAD.push(getGamepadInput(2));
+keymap.B.GAMEPAD.push(getGamepadInput(3));
 
 // Start
-keymap.A.KEYBOARD.push(getKeyInput(Key.RETURN));
-keymap.A.KEYBOARD.push(getKeyInput(Key.SPACE));
-keymap.A.KEYBOARD.push(getKeyInput(Key.NUMPAD_3));
-keymap.A.GAMEPAD.push(getGamepadInput(9));
+keymap.START.KEYBOARD.push(getKeyInput(Key.RETURN));
+keymap.START.KEYBOARD.push(getKeyInput(Key.SPACE));
+keymap.START.KEYBOARD.push(getKeyInput(Key.NUMPAD_3));
+keymap.START.GAMEPAD.push(getGamepadInput(9));
 
 // Select
-keymap.A.KEYBOARD.push(getKeyInput(Key.SHIFT));
-keymap.A.KEYBOARD.push(getKeyInput(Key.TAB));
-keymap.A.KEYBOARD.push(getKeyInput(Key.BACK_SLASH));
-keymap.A.KEYBOARD.push(getKeyInput(Key.NUMPAD_1));
-keymap.A.GAMEPAD.push(getGamepadInput(8));
+keymap.SELECT.KEYBOARD.push(getKeyInput(Key.SHIFT));
+keymap.SELECT.KEYBOARD.push(getKeyInput(Key.TAB));
+keymap.SELECT.KEYBOARD.push(getKeyInput(Key.BACK_SLASH));
+keymap.SELECT.KEYBOARD.push(getKeyInput(Key.NUMPAD_1));
+keymap.SELECT.GAMEPAD.push(getGamepadInput(8));
 
 var KEYMAP = keymap;
 
@@ -265,10 +268,10 @@ var ResponsiveGamepadService = function () {
       var controllerState = {};
 
       // Loop through our Keys, and quickly build our controller state
-      this.keyMap.forEach(function (key) {
+      this.keyMapKeys.forEach(function (key) {
 
         // Find if any of the keyboard, gamepad or touchpad buttons are pressed
-        var keyboardState = _this2.keyMapKeys[key].KEYBOARD.some(function (keyInput) {
+        var keyboardState = _this2.keyMap[key].KEYBOARD.some(function (keyInput) {
           return keyInput.ACTIVE;
         });
 
@@ -278,7 +281,7 @@ var ResponsiveGamepadService = function () {
         }
 
         // Find if any of the keyboard, gamepad or touchpad buttons are pressed
-        var gamepadState = _this2.keyMapKeys[key].GAMEPAD.some(function (gamepadInput) {
+        var gamepadState = _this2.keyMap[key].GAMEPAD.some(function (gamepadInput) {
           return gamepadInput.ACTIVE;
         });
 
@@ -288,7 +291,7 @@ var ResponsiveGamepadService = function () {
         }
 
         // Find if any of the keyboard, gamepad or touchpad buttons are pressed
-        var touchState = _this2.keyMapKeys[key].TOUCHPAD.some(function (touchInput) {
+        var touchState = _this2.keyMap[key].TOUCHPAD.some(function (touchInput) {
           return touchInput.ACTIVE;
         });
 
@@ -319,9 +322,9 @@ var ResponsiveGamepadService = function () {
 
       // Loop through our keys
       this.keyMapKeys.forEach(function (key) {
-        _this3.keyMapKeys[key].KEYBOARD.forEach(function (keyInput, index) {
-          if (keyInput.EVENT_CODE === keyEvent.keyCode) {
-            _this3.keyMapKeys[key].KEYBOARD[index].ACTIVE = isPressed;
+        _this3.keyMap[key].KEYBOARD.forEach(function (keyInput, index) {
+          if (keyInput.KEY_CODE === keyEvent.keyCode) {
+            _this3.keyMap[key].KEYBOARD[index].ACTIVE = isPressed;
           }
         });
       });
@@ -349,19 +352,19 @@ var ResponsiveGamepadService = function () {
 
         // Loop through our keys
         _this4.keyMapKeys.forEach(function (key) {
-          _this4.keyMapKeys[key].GAMEPAD.forEach(function (gamepadInput, index) {
+          _this4.keyMap[key].GAMEPAD.forEach(function (gamepadInput, index) {
 
             // Check if we are a gamepad button
-            if (_this4.keyMapKeys[key].GAMEPAD[index].BUTTON_ID || _this4.keyMapKeys[key].GAMEPAD[index].BUTTON_ID === 0) {
-              _this4.keyMapKeys[key].GAMEPAD[index].ACTIVE = isButtonPressed(gamepad, 14);
+            if (_this4.keyMap[key].GAMEPAD[index].BUTTON_ID || _this4.keyMap[key].GAMEPAD[index].BUTTON_ID === 0) {
+              _this4.keyMap[key].GAMEPAD[index].ACTIVE = isButtonPressed(gamepad, _this4.keyMap[key].GAMEPAD[index].BUTTON_ID);
             }
 
             // Check if we are an axis
-            if (_this4.keyMapKeys[key].GAMEPAD[index].AXIS_ID !== undefined && _this4.keyMapKeys[key].GAMEPAD[index].IS_POSITIVE !== undefined) {
-              if (_this4.keyMapKeys[key].GAMEPAD[index].IS_POSITIVE) {
-                _this4.keyMapKeys[key].GAMEPAD[index].ACTIVE = getAnalogStickAxis(gamepad, _this4.keyMapKeys[key].GAMEPAD[index].AXIS_ID) > +_this4.gamepadAnalogStickDeadZone;
+            if (_this4.keyMap[key].GAMEPAD[index].JOYSTICK.AXIS_ID !== undefined && _this4.keyMap[key].GAMEPAD[index].JOYSTICK.IS_POSITIVE !== undefined) {
+              if (_this4.keyMap[key].GAMEPAD[index].JOYSTICK.IS_POSITIVE) {
+                _this4.keyMap[key].GAMEPAD[index].ACTIVE = getAnalogStickAxis(gamepad, _this4.keyMap[key].GAMEPAD[index].JOYSTICK.AXIS_ID) > +_this4.gamepadAnalogStickDeadZone;
               } else {
-                _this4.keyMapKeys[key].GAMEPAD[index].ACTIVE = getAnalogStickAxis(gamepad, _this4.keyMapKeys[key].GAMEPAD[index].AXIS_ID) < -_this4.gamepadAnalogStickDeadZone;
+                _this4.keyMap[key].GAMEPAD[index].ACTIVE = getAnalogStickAxis(gamepad, _this4.keyMap[key].GAMEPAD[index].JOYSTICK.AXIS_ID) < -_this4.gamepadAnalogStickDeadZone;
               }
             }
           });
@@ -383,6 +386,6 @@ var ResponsiveGamepadService = function () {
   return ResponsiveGamepadService;
 }();
 
-var ResponsiveGamepad = new ResponsiveGamepad();
+var ResponsiveGamepad = new ResponsiveGamepadService();
 
 export { ResponsiveGamepad };
