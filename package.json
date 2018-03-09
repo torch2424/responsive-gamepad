@@ -18,6 +18,9 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint src"
   },
+  "files": [
+    "dist"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/torch2424/responsive-gamepad.git"
