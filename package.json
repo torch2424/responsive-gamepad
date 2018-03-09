@@ -63,7 +63,8 @@
   },
   "dependencies": {
     "preact": "^8.2.1",
-    "preact-compat": "^3.17.0"
+    "preact-compat": "^3.17.0",
+    "promise-polyfill": "^7.1.0"
   },
   "devDependencies": {
     "babel-plugin-external-helpers": "^6.22.0",
