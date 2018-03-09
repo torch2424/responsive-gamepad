@@ -1,3 +1,6 @@
+# System files
+**/.DS_Store
+
 # Preact
 node_modules
 /build

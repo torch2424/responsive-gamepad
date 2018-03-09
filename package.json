@@ -1,6 +1,6 @@
 {
   "name": "responsive-gamepad",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "Handle Keyboard, Gamepad, and Touch Controls under a single API",
   "main": "dist/responsive-gamepad.cjs.js",
   "module": "dist/responsive-gamepad.esm.js",
@@ -19,7 +19,9 @@
     "lint": "eslint src"
   },
   "files": [
-    "dist"
+    "dist/*",
+    "README.md",
+    "LICENSE"
   ],
   "repository": {
     "type": "git",
@@ -65,11 +67,11 @@
     ]
   },
   "dependencies": {
-    "preact": "^8.2.1",
-    "preact-compat": "^3.17.0",
-    "promise-polyfill": "^7.1.0"
   },
   "devDependencies": {
+    "preact": "^8.2.1",
+    "preact-compat": "^3.17.0",
+    "promise-polyfill": "^7.1.0",
     "babel-plugin-external-helpers": "^6.22.0",
     "babel-preset-env": "^1.6.1",
     "concurrently": "^3.5.1",
