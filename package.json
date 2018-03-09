@@ -1,0 +1,40 @@
+{
+  "name": "responsive-gamepad",
+  "version": "1.0.0",
+  "description": "Handle Keyboard, Gamepad, and Touch Controls under a single API",
+  "main": "index.js",
+  "scripts": {
+    "start": "npx concurrently --kill-others --names \"DEBUGGER,WASM,LIB\" -c \"bgBlue.bold,bgMagenta.bold,bgGreen.bold\" \"npm run debugger:watch\" \"npm run wasm:watch\" \"npm run lib:watch\"",
+    "dev": "",
+    "demo": "",
+    "demo:serve": "",
+    "demo:build": "",
+    "lib:watch": "",
+    "lib:build"
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/torch2424/responsive-gamepad.git"
+  },
+  "keywords": [
+    "gamepad",
+    "game",
+    "controller",
+    "es6",
+    "browser",
+    "keyboard",
+    "controls",
+    "gaming",
+    "touch",
+    "mobile",
+    "anroid",
+    "ios"
+  ],
+  "author": "Aaron Turner",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/torch2424/responsive-gamepad/issues"
+  },
+  "homepage": "https://github.com/torch2424/responsive-gamepad#readme"
+}
