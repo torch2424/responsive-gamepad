@@ -17,7 +17,16 @@ var keyInputSchema = {
     IS_POSITIVE: undefined
   }
 };
-var keyMapSchema = {
+
+var touchInputSchema = {
+  ACTIVE: false,
+  ELEMENT: undefined,
+  TYPE: undefined,
+  DIRECTION: undefined,
+  EVENT_HANDLER: undefined
+
+  // Define our finaly kerboard schema here
+};var keyMapSchema = {
   UP: {
     KEYBOARD: [],
     GAMEPAD: [],
@@ -77,6 +86,34 @@ function getGamepadInput(gamepadButtonId, axisId, axisIsPositive) {
     input.JOYSTICK.IS_POSITIVE = axisIsPositive;
   }
   console.log(input);
+  return input;
+}
+
+function getTouchInput(element, type, direction, eventHandler) {
+  var input = Object.assign({}, touchInputSchema);
+
+  // TODO: Check the type for a valid type
+
+  // Add our passed parameters
+  input.ELEMENT = element;
+  input.TYPE = type;
+  input.DIRECTION = direction;
+  input.EVENT_HANDLER = eventHandler;
+
+  // Define our eventListener functions
+  var eventListenerCallback = function eventListenerCallback(event) {
+    if (input.EVENT_HANDLER) {
+      input.EVENT_HANDLER(event);
+    }
+  };
+
+  // Add event listeners to the element
+  input.ELEMENT.addEventListener("touchstart", eventListenerCallback);
+  input.ELEMENT.addEventListener("touchmove", eventListenerCallback);
+  input.ELEMENT.addEventListener("touchend", eventListenerCallback);
+  input.ELEMENT.addEventListener("mousedown", eventListenerCallback);
+  input.ELEMENT.addEventListener("mouseup", eventListenerCallback);
+
   return input;
 }
 
@@ -257,16 +294,31 @@ var ResponsiveGamepadService = function () {
       }
     }
   }, {
+    key: 'addTouchInput',
+    value: function addTouchInput(keyMapKey, element, type, direction) {
+      var _this2 = this;
+
+      // Declare our touch input
+      // TODO: May have to add the event handler after getting the input
+      var touchInput = void 0;
+      touchInput = getTouchInput(element, type, direction, function (event) {
+        _this2.updateVirtualGamepad(touchInput, event);
+      });
+
+      // Add the input to our keymap
+      this.keyMap[keyMapKey].TOUCHPAD.push(touchInput);
+    }
+  }, {
     key: 'getState',
     value: function getState() {
-      var _this2 = this;
+      var _this3 = this;
 
       // Keyboard handled by listeners on window
 
       // Update the gamepad state
       this.updateGamepad();
 
-      // TODO: Update the virtual keyboard state
+      // Touch Handled by listeners on touchInputs
 
       // Create an abstracted controller state
       var controllerState = {};
@@ -275,7 +327,7 @@ var ResponsiveGamepadService = function () {
       this.keyMapKeys.forEach(function (key) {
 
         // Find if any of the keyboard, gamepad or touchpad buttons are pressed
-        var keyboardState = _this2.keyMap[key].KEYBOARD.some(function (keyInput) {
+        var keyboardState = _this3.keyMap[key].KEYBOARD.some(function (keyInput) {
           return keyInput.ACTIVE;
         });
 
@@ -285,7 +337,7 @@ var ResponsiveGamepadService = function () {
         }
 
         // Find if any of the keyboard, gamepad or touchpad buttons are pressed
-        var gamepadState = _this2.keyMap[key].GAMEPAD.some(function (gamepadInput) {
+        var gamepadState = _this3.keyMap[key].GAMEPAD.some(function (gamepadInput) {
           return gamepadInput.ACTIVE;
         });
 
@@ -295,7 +347,7 @@ var ResponsiveGamepadService = function () {
         }
 
         // Find if any of the keyboard, gamepad or touchpad buttons are pressed
-        var touchState = _this2.keyMap[key].TOUCHPAD.some(function (touchInput) {
+        var touchState = _this3.keyMap[key].TOUCHPAD.some(function (touchInput) {
           return touchInput.ACTIVE;
         });
 
@@ -316,7 +368,7 @@ var ResponsiveGamepadService = function () {
   }, {
     key: 'updateKeyboard',
     value: function updateKeyboard(keyEvent) {
-      var _this3 = this;
+      var _this4 = this;
 
       // Get the new state of the key
       var isPressed = false;
@@ -326,9 +378,9 @@ var ResponsiveGamepadService = function () {
 
       // Loop through our keys
       this.keyMapKeys.forEach(function (key) {
-        _this3.keyMap[key].KEYBOARD.forEach(function (keyInput, index) {
+        _this4.keyMap[key].KEYBOARD.forEach(function (keyInput, index) {
           if (keyInput.KEY_CODE === keyEvent.keyCode) {
-            _this3.keyMap[key].KEYBOARD[index].ACTIVE = isPressed;
+            _this4.keyMap[key].KEYBOARD[index].ACTIVE = isPressed;
           }
         });
       });
@@ -339,7 +391,7 @@ var ResponsiveGamepadService = function () {
   }, {
     key: 'updateGamepad',
     value: function updateGamepad() {
-      var _this4 = this;
+      var _this5 = this;
 
       // Similar to: https://github.com/torch2424/picoDeploy/blob/master/src/assets/3pLibs/pico8gamepad/pico8gamepad.js
       // Gampad Diagram: https://www.html5rocks.com/en/tutorials/doodles/gamepad/#toc-gamepadinfo
@@ -355,20 +407,20 @@ var ResponsiveGamepadService = function () {
         }
 
         // Loop through our keys
-        _this4.keyMapKeys.forEach(function (key) {
-          _this4.keyMap[key].GAMEPAD.forEach(function (gamepadInput, index) {
+        _this5.keyMapKeys.forEach(function (key) {
+          _this5.keyMap[key].GAMEPAD.forEach(function (gamepadInput, index) {
 
             // Check if we are a gamepad button
-            if (_this4.keyMap[key].GAMEPAD[index].BUTTON_ID || _this4.keyMap[key].GAMEPAD[index].BUTTON_ID === 0) {
-              _this4.keyMap[key].GAMEPAD[index].ACTIVE = isButtonPressed(gamepad, _this4.keyMap[key].GAMEPAD[index].BUTTON_ID);
+            if (_this5.keyMap[key].GAMEPAD[index].BUTTON_ID || _this5.keyMap[key].GAMEPAD[index].BUTTON_ID === 0) {
+              _this5.keyMap[key].GAMEPAD[index].ACTIVE = isButtonPressed(gamepad, _this5.keyMap[key].GAMEPAD[index].BUTTON_ID);
             }
 
             // Check if we are an axis
-            if (_this4.keyMap[key].GAMEPAD[index].JOYSTICK.AXIS_ID !== undefined && _this4.keyMap[key].GAMEPAD[index].JOYSTICK.IS_POSITIVE !== undefined) {
-              if (_this4.keyMap[key].GAMEPAD[index].JOYSTICK.IS_POSITIVE) {
-                _this4.keyMap[key].GAMEPAD[index].ACTIVE = getAnalogStickAxis(gamepad, _this4.keyMap[key].GAMEPAD[index].JOYSTICK.AXIS_ID) > +_this4.gamepadAnalogStickDeadZone;
+            if (_this5.keyMap[key].GAMEPAD[index].JOYSTICK.AXIS_ID !== undefined && _this5.keyMap[key].GAMEPAD[index].JOYSTICK.IS_POSITIVE !== undefined) {
+              if (_this5.keyMap[key].GAMEPAD[index].JOYSTICK.IS_POSITIVE) {
+                _this5.keyMap[key].GAMEPAD[index].ACTIVE = getAnalogStickAxis(gamepad, _this5.keyMap[key].GAMEPAD[index].JOYSTICK.AXIS_ID) > +_this5.gamepadAnalogStickDeadZone;
               } else {
-                _this4.keyMap[key].GAMEPAD[index].ACTIVE = getAnalogStickAxis(gamepad, _this4.keyMap[key].GAMEPAD[index].JOYSTICK.AXIS_ID) < -_this4.gamepadAnalogStickDeadZone;
+                _this5.keyMap[key].GAMEPAD[index].ACTIVE = getAnalogStickAxis(gamepad, _this5.keyMap[key].GAMEPAD[index].JOYSTICK.AXIS_ID) < -_this5.gamepadAnalogStickDeadZone;
               }
             }
           });
@@ -383,8 +435,9 @@ var ResponsiveGamepadService = function () {
     }
   }, {
     key: 'updateVirtualGamepad',
-    value: function updateVirtualGamepad() {
-      // TODO:
+    value: function updateVirtualGamepad(touchInput, event) {
+      // Function called on touch event
+      console.log('Random ID: ' + Math.random() + ' Touch event:', touchInput, event);
     }
   }]);
   return ResponsiveGamepadService;
