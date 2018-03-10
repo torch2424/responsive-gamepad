@@ -82,11 +82,9 @@ function getGamepadInput(gamepadButtonId, axisId, axisIsPositive) {
   if (gamepadButtonId || gamepadButtonId === 0) {
     input.BUTTON_ID = gamepadButtonId;
   } else if (axisId !== undefined && axisIsPositive !== undefined) {
-    console.log(axisId, axisIsPositive);
     input.JOYSTICK.AXIS_ID = axisId;
     input.JOYSTICK.IS_POSITIVE = axisIsPositive;
   }
-  console.log(input);
   return input;
 }
 
@@ -462,6 +460,9 @@ var ResponsiveGamepadService = function () {
         });
       });
     }
+
+    // Reset all Diretion keys for a DPAD for touch Inputs
+
   }, {
     key: 'resetTouchDpad',
     value: function resetTouchDpad() {
@@ -475,16 +476,17 @@ var ResponsiveGamepadService = function () {
         });
       });
     }
+
+    // Function called on an event of a touchInput SVG Element
+
   }, {
     key: 'updateTouchpad',
     value: function updateTouchpad(keyMapKey, touchInput, event) {
+
       if (!event || event.type.includes('touch') && !event.touches) return;
 
       //event.stopPropagation();
       event.preventDefault();
-
-      // Function called on touch event
-      console.log('Random ID: ' + Math.random() + ' Touch event:', touchInput, event);
 
       //this.debugCurrentTouch(event);
 
@@ -492,9 +494,70 @@ var ResponsiveGamepadService = function () {
       if (event.type === "touchstart" || event.type === "touchmove" || event.type === "mousedown") {
         // Active
 
-        // TODO: Dpad Type
+        if (touchInput.TYPE === 'DPAD') {
 
-        // TODO: Button Type
+          // Calculate for the correct key
+          // Only using the first touch, since we shouldn't be having two fingers on the dpad
+          var touch = void 0;
+          if (event.type.includes('touch')) {
+            touch = event.touches[0];
+          } else if (event.type.includes('mouse')) {
+            touch = event;
+          }
+
+          // Find if the horizontal or vertical influence is greater
+          // Find our centers of our rectangles, and our unbiased X Y values on the rect
+          var rectCenterX = (touchInput.BOUNDING_RECT.right - touchInput.BOUNDING_RECT.left) / 2;
+          var rectCenterY = (touchInput.BOUNDING_RECT.bottom - touchInput.BOUNDING_RECT.top) / 2;
+          var touchX = touch.clientX - touchInput.BOUNDING_RECT.left;
+          var touchY = touch.clientY - touchInput.BOUNDING_RECT.top;
+
+          // Lesson From: picoDeploy
+          // Fix for shoot button causing the character to move right on multi touch error
+          // + 50 for some buffer
+          if (touchX > rectCenterX + touchInput.BOUNDING_RECT.width / 2 + 50) {
+            // Ignore the event
+            return;
+          }
+
+          // Create an additonal influece for horizontal, to make it feel better
+          var horizontalInfluence = touchInput.BOUNDING_RECT.width / 8;
+
+          // Determine if we are horizontal or vertical
+          var isHorizontal = Math.abs(rectCenterX - touchX) + horizontalInfluence > Math.abs(rectCenterY - touchY);
+
+          // Find if left or right from width, vice versa for height
+          if (isHorizontal) {
+            // Add a horizontal dead zone
+            var deadzoneSize = touchInput.BOUNDING_RECT.width / 20;
+            if (Math.abs(touchInput.BOUNDING_RECT.width / 2 - touchX) > deadzoneSize) {
+
+              var isLeft = touchX < touchInput.BOUNDING_RECT.width / 2;
+
+              if (isLeft && touchInput.DIRECTION === 'LEFT') {
+                touchInput.ACTIVE = true;
+              } else if (!isLeft && touchInput.DIRECTION === 'RIGHT') {
+                touchInput.ACTIVE = true;
+              } else {
+                touchInput.ACTIVE = false;
+              }
+            }
+          } else {
+            var isUp = touchY < touchInput.BOUNDING_RECT.height / 2;
+            if (isUp && touchInput.DIRECTION === 'UP') {
+              touchInput.ACTIVE = true;
+            } else if (!isUp && touchInput.DIRECTION === 'DOWN') {
+              touchInput.ACTIVE = true;
+            } else {
+              touchInput.ACTIVE = false;
+            }
+          }
+        }
+
+        // Button Type
+        if (touchInput.TYPE === 'BUTTON') {
+          touchInput.ACTIVE = true;
+        }
       } else {
         // Not active
 
@@ -503,7 +566,10 @@ var ResponsiveGamepadService = function () {
           this.resetTouchDpad();
         }
 
-        // TODO: Button Type
+        // Button Type
+        if (touchInput.TYPE === 'BUTTON') {
+          touchInput.ACTIVE = false;
+        }
       }
     }
   }]);

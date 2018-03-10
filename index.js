@@ -17,6 +17,13 @@ export default class App extends Component {
 		const bElement = document.getElementById('gamepadB');
 
 		ResponsiveGamepad.addTouchInput('UP', dpadElement, 'DPAD', 'UP');
+		ResponsiveGamepad.addTouchInput('RIGHT', dpadElement, 'DPAD', 'RIGHT');
+		ResponsiveGamepad.addTouchInput('DOWN', dpadElement, 'DPAD', 'DOWN');
+		ResponsiveGamepad.addTouchInput('LEFT', dpadElement, 'DPAD', 'LEFT');
+		ResponsiveGamepad.addTouchInput('A', aElement, 'BUTTON');
+		ResponsiveGamepad.addTouchInput('B', bElement, 'BUTTON');
+		ResponsiveGamepad.addTouchInput('START', startElement, 'BUTTON');
+		ResponsiveGamepad.addTouchInput('SELECT', selectElement, 'BUTTON');
 
     requestAnimationFrame(() => {
       this.displayGamepadState();
