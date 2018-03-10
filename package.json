@@ -19,9 +19,7 @@
     "lint": "eslint src"
   },
   "files": [
-    "dist/responsive-gamepad.cjs.js",
-    "dist/responsive-gamepad.esm.js",
-    "dist/responsive-gamepad.umd.js",
+    "dist",
     "README.md",
     "LICENSE"
   ],
