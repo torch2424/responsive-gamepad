@@ -48,6 +48,18 @@ export default class App extends Component {
 
 				<div class="preventDefault">
 					<h3>I am very tall to show off `event.preventDefault()`. E.g arrow keys wont scroll if in the keymap</h3>
+					<p>But typing will work on input type form fields!</p>
+					<input type="text" />
+					<br />
+					<textarea />
+					<br />
+					<button onClick={() => {console.log('I was the button your pressed a key on.')}}>Press space on me, and check your logs!</button>
+					<br />
+					<select>
+					  <option value="use">use</option>
+					  <option value="arrow">arrow</option>
+					  <option value="keys">keys</option>
+					</select>
 				</div>
 
 				<div class="gamepad">

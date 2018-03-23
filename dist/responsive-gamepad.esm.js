@@ -255,6 +255,10 @@ var createClass = function () {
   };
 }();
 
+// HTML Tags that can be focused on, where the library should be disabled
+// https://www.w3schools.com/tags/ref_byfunc.asp
+var INPUT_HTML_TAGS = ['input', 'textarea', 'button', 'select', 'option', 'optgroup', 'label', 'datalist'];
+
 // Helpers for accessing gamepad
 // Similar to: https://github.com/torch2424/picoDeploy/blob/master/src/assets/3pLibs/pico8gamepad/pico8gamepad.js
 function getAnalogStickAxis(gamepad, axisId) {
@@ -373,6 +377,21 @@ var ResponsiveGamepadService = function () {
     key: 'updateKeyboard',
     value: function updateKeyboard(keyEvent) {
       var _this4 = this;
+
+      // Ignore the event if focus on a input-table field
+      // https://www.w3schools.com/tags/ref_byfunc.asp
+      if (keyEvent && keyEvent.target && keyEvent.target.tagName) {
+        var isTargetInputField = INPUT_HTML_TAGS.some(function (htmlTag) {
+          if (keyEvent && keyEvent.target.tagName.toLowerCase() === htmlTag.toLowerCase()) {
+            return true;
+          }
+          return false;
+        });
+
+        if (isTargetInputField) {
+          return;
+        }
+      }
 
       // Get the new state of the key
       var isPressed = false;

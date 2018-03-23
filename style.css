@@ -13,8 +13,7 @@ h1 {
 .preventDefault {
 	height: 2000px;
 	padding: 20px;
-	background-color: #C774E8;
-	opacity: 0.75;
+	background-color: rgba(199,116,232, 0.55);
 }
 
 .gamepad {
@@ -26,9 +25,11 @@ h1 {
 	width: 100%;
 	height: 100%;
 	opacity: 0.5;
+	pointer-events: none;
 }
 
 .gamepad svg {
 	width: 50%;
 	height: 20%;
+	pointer-events: auto;
 }
