@@ -1,6 +1,6 @@
 {
   "name": "responsive-gamepad",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Handle Keyboard, Gamepad, and Touch Controls under a single API",
   "main": "dist/responsive-gamepad.cjs.js",
   "module": "dist/responsive-gamepad.esm.js",
