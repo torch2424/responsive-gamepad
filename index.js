@@ -46,6 +46,10 @@ export default class App extends Component {
         <pre id="gamepadState">
         </pre>
 
+				<div class="preventDefault">
+					<h3>I am very tall to show off `event.preventDefault()`. E.g arrow keys wont scroll if in the keymap</h3>
+				</div>
+
 				<div class="gamepad">
 
 					{/* DPAD */}

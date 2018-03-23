@@ -394,6 +394,9 @@ var ResponsiveGamepadService = function () {
           }
         });
       });
+
+      // If we found a key, prevent default so page wont scroll and things
+      keyEvent.preventDefault();
     }
 
     // Function to check the gamepad API for the gamepad state
