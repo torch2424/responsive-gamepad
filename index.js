@@ -1,21 +1,34 @@
 import './style';
 import { Component } from 'preact';
-import { ResponsiveGamepad, DEFAULT_KEYMAP } from './dist/responsive-gamepad.esm';
+import { ResponsiveGamepad, KEYMAP_DEFAULT } from './dist/responsive-gamepad.esm';
 
 export default class App extends Component {
 
 	constructor() {
 		super();
-
-		this.setState({
-			touchSelectId: undefined
-		});
 	}
 
 	// Using componentDidMount to wait for the canvas element to be inserted in DOM
 	componentDidMount() {
-    // Initialize our gamepad
-		ResponsiveGamepad.initialize(DEFAULT_KEYMAP);
+		this.enableGamepad();
+
+		requestAnimationFrame(() => {
+			this.displayGamepadState();
+		});
+	}
+
+  displayGamepadState() {
+    const gamepadStateElement = document.getElementById("gamepadState");
+		gamepadStateElement.innerHTML = JSON.stringify(ResponsiveGamepad.getState(), null, 4);
+
+    requestAnimationFrame(() => {
+      this.displayGamepadState();
+    });
+	}
+
+	enableGamepad() {
+		// Initialize our gamepad
+		ResponsiveGamepad.enable(KEYMAP_DEFAULT());
 
 		// Add our touch inputs
 		const dpadElement = document.getElementById('gamepadDpad');
@@ -31,26 +44,35 @@ export default class App extends Component {
 		ResponsiveGamepad.addTouchInput('B', bElement, 'BUTTON');
 		ResponsiveGamepad.addTouchInput('START', startElement, 'BUTTON');
 
+		this.setState({
+			...this.state,
+			touchSelectId: undefined
+		});
 		this.toggleTouchSelectInput();
-
-    requestAnimationFrame(() => {
-      this.displayGamepadState();
-    });
 	}
 
-  displayGamepadState() {
-    const gamepadStateElement = document.getElementById("gamepadState");
-    gamepadStateElement.innerHTML = JSON.stringify(ResponsiveGamepad.getState(), null, 4);
+	disableGamepad() {
+		ResponsiveGamepad.disable();
 
-    requestAnimationFrame(() => {
-      this.displayGamepadState();
-    });
+		this.setState({
+			...this.state,
+			touchSelectId: undefined
+		});
+	}
+
+	toggleResponsiveGamepad() {
+		if (ResponsiveGamepad.isEnabled()) {
+			this.disableGamepad();
+		} else {
+			this.enableGamepad();
+		}
 	}
 
 	toggleTouchSelectInput() {
 		if (this.state.touchSelectId) {
 			ResponsiveGamepad.removeTouchInput('SELECT', this.state.touchSelectId);
 			this.setState({
+				...this.state,
 				touchSelectId: undefined
 			});
 		} else {
@@ -74,23 +96,34 @@ export default class App extends Component {
 
 				<div class="gamepadState">
 					<h3>Responsive Gamepad State:</h3>
+					<div>Enabled: {ResponsiveGamepad.isEnabled().toString()}</div>
 					<pre id="gamepadState">
 					</pre>
+				</div>
+
+				<div class="addRemoveTouch">
+					<h3>Enabled/Disable</h3>
+					<p>Responsive Gamepad can be enabled and disabled (as a whole) as needed</p>
+					<div>
+						<button onClick={() => this.toggleResponsiveGamepad()} >
+							{ResponsiveGamepad.isEnabled() ? `Disable Responsive Gamepad` : 'Enable Responsive Gamepad'}
+						</button>
+					</div>
 				</div>
 
 				<div class="addRemoveTouch">
 					<h3>Dynamic Touch Input</h3>
 					<p>Touch inputs can be added/removed on the fly!</p>
 					<div>
-						<button onClick={() => this.toggleTouchSelectInput()} >
+						<button onClick={() => this.toggleTouchSelectInput()} disabled={!ResponsiveGamepad.isEnabled()}>
 							{this.state.touchSelectId ? `Disable SELECT Touch Input (current Id: ${this.state.touchSelectId})` : 'Enable SELECT Touch Input'}
 						</button>
 					</div>
 				</div>
 
 				<div class="preventDefault">
-					<h3>I am very tall to show off `event.preventDefault()`. E.g arrow keys wont scroll if in the keymap</h3>
-					<p>But typing will work on input type form fields!</p>
+					<h3>Prevent Default</h3>
+					<p>I am very tall to show off `event.preventDefault()`. E.g arrow keys wont scroll if in the keymap. But typing will work on input type form fields!</p>
 					<input type="text" />
 					<br />
 					<textarea />

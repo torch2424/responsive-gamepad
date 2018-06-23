@@ -35,7 +35,7 @@ h1 {
 }
 
 .preventDefault {
-	height: 2000px;
+	height: 500px;
 	background-color: rgba(199,116,232, 0.55);
 
 	margin-top: 10px;
@@ -44,7 +44,7 @@ h1 {
 }
 
 .gamepad {
-	position: absolute;
+	position: fixed;
 	bottom: 0;
 	left: 0;
 	display: flex;

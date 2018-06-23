@@ -247,7 +247,9 @@ keymap.SELECT.KEYBOARD.push(getKeyInput(Key.BACK_SLASH));
 keymap.SELECT.KEYBOARD.push(getKeyInput(Key.NUMPAD_1));
 keymap.SELECT.GAMEPAD.push(getGamepadInput(8));
 
-var KEYMAP = keymap;
+var KEYMAP = function KEYMAP() {
+  return JSON.parse(JSON.stringify(keymap));
+};
 
 var classCallCheck = function (instance, Constructor) {
   if (!(instance instanceof Constructor)) {
@@ -294,41 +296,55 @@ var ResponsiveGamepadService = function () {
     // Our settings
     this.gamepadAnalogStickDeadZone = 0.25;
     this.keyMapKeys = Object.keys(KeyMapSchema());
-    this.keyMap = KEYMAP;
+    this.keyMap = undefined;
+    this.enabled = false;
   }
 
   createClass(ResponsiveGamepadService, [{
-    key: 'initialize',
-    value: function initialize(keyMap) {
-      var _this = this;
+    key: 'enable',
+    value: function enable(keyMap) {
 
-      // Add our key event listeners
-      window.addEventListener('keyup', function (event) {
-        _this.updateKeyboard(event);
-      });
-      window.addEventListener('keydown', function (event) {
-        _this.updateKeyboard(event);
-      });
-
-      // Add a resize listen to update the gamepad rect on resize
-      window.addEventListener("resize", function () {
-        _this.updateTouchpadRect();
-      });
+      if (!this.keyMap) {
+        this.keyMap = KEYMAP();
+      }
 
       if (keyMap) {
         this.keyMap = keyMap;
       }
+
+      // Add our key event listeners
+      window.addEventListener('keyup', this.updateKeyboard.bind(this));
+      window.addEventListener('keydown', this.updateKeyboard.bind(this));
+      // Add a resize listen to update the gamepad rect on resize
+      window.addEventListener("resize", this.updateTouchpadRect.bind(this));
+
+      this.enabled = true;
+    }
+
+    // Disable responsive gamepad, and remove all the listeners
+
+  }, {
+    key: 'disable',
+    value: function disable() {
+      this.keyMap = undefined;
+
+      this.enabled = false;
+    }
+  }, {
+    key: 'isEnabled',
+    value: function isEnabled() {
+      return this.enabled;
     }
   }, {
     key: 'addTouchInput',
     value: function addTouchInput(keyMapKey, element, type, direction) {
-      var _this2 = this;
+      var _this = this;
 
       // Declare our touch input
       // TODO: May have to add the event handler after getting the input
       var touchInput = void 0;
       touchInput = getTouchInput(element, type, direction, function (event) {
-        _this2.updateTouchpad(keyMapKey, touchInput, event);
+        _this.updateTouchpad(keyMapKey, touchInput, event);
       });
 
       // Add the input to our keymap
@@ -363,7 +379,11 @@ var ResponsiveGamepadService = function () {
   }, {
     key: 'getState',
     value: function getState() {
-      var _this3 = this;
+      var _this2 = this;
+
+      if (!this.enabled) {
+        return {};
+      }
 
       // Keyboard handled by listeners on window
 
@@ -379,7 +399,7 @@ var ResponsiveGamepadService = function () {
       this.keyMapKeys.forEach(function (key) {
 
         // Find if any of the keyboard, gamepad or touchpad buttons are pressed
-        var keyboardState = _this3.keyMap[key].KEYBOARD.some(function (keyInput) {
+        var keyboardState = _this2.keyMap[key].KEYBOARD.some(function (keyInput) {
           return keyInput.ACTIVE;
         });
 
@@ -389,7 +409,7 @@ var ResponsiveGamepadService = function () {
         }
 
         // Find if any of the keyboard, gamepad or touchpad buttons are pressed
-        var gamepadState = _this3.keyMap[key].GAMEPAD.some(function (gamepadInput) {
+        var gamepadState = _this2.keyMap[key].GAMEPAD.some(function (gamepadInput) {
           return gamepadInput.ACTIVE;
         });
 
@@ -399,7 +419,7 @@ var ResponsiveGamepadService = function () {
         }
 
         // Find if any of the keyboard, gamepad or touchpad buttons are pressed
-        var touchState = _this3.keyMap[key].TOUCHPAD.some(function (touchInput) {
+        var touchState = _this2.keyMap[key].TOUCHPAD.some(function (touchInput) {
           return touchInput.ACTIVE;
         });
 
@@ -420,7 +440,11 @@ var ResponsiveGamepadService = function () {
   }, {
     key: 'updateKeyboard',
     value: function updateKeyboard(keyEvent) {
-      var _this4 = this;
+      var _this3 = this;
+
+      if (!this.enabled) {
+        return;
+      }
 
       // Ignore the event if focus on a input-table field
       // https://www.w3schools.com/tags/ref_byfunc.asp
@@ -445,9 +469,9 @@ var ResponsiveGamepadService = function () {
 
       // Loop through our keys
       this.keyMapKeys.forEach(function (key) {
-        _this4.keyMap[key].KEYBOARD.forEach(function (keyInput, index) {
+        _this3.keyMap[key].KEYBOARD.forEach(function (keyInput, index) {
           if (keyInput.KEY_CODE === keyEvent.keyCode) {
-            _this4.keyMap[key].KEYBOARD[index].ACTIVE = isPressed;
+            _this3.keyMap[key].KEYBOARD[index].ACTIVE = isPressed;
           }
         });
       });
@@ -461,7 +485,7 @@ var ResponsiveGamepadService = function () {
   }, {
     key: 'updateGamepad',
     value: function updateGamepad() {
-      var _this5 = this;
+      var _this4 = this;
 
       // Similar to: https://github.com/torch2424/picoDeploy/blob/master/src/assets/3pLibs/pico8gamepad/pico8gamepad.js
       // Gampad Diagram: https://www.html5rocks.com/en/tutorials/doodles/gamepad/#toc-gamepadinfo
@@ -477,20 +501,20 @@ var ResponsiveGamepadService = function () {
         }
 
         // Loop through our keys
-        _this5.keyMapKeys.forEach(function (key) {
-          _this5.keyMap[key].GAMEPAD.forEach(function (gamepadInput, index) {
+        _this4.keyMapKeys.forEach(function (key) {
+          _this4.keyMap[key].GAMEPAD.forEach(function (gamepadInput, index) {
 
             // Check if we are a gamepad button
-            if (_this5.keyMap[key].GAMEPAD[index].BUTTON_ID || _this5.keyMap[key].GAMEPAD[index].BUTTON_ID === 0) {
-              _this5.keyMap[key].GAMEPAD[index].ACTIVE = isButtonPressed(gamepad, _this5.keyMap[key].GAMEPAD[index].BUTTON_ID);
+            if (_this4.keyMap[key].GAMEPAD[index].BUTTON_ID || _this4.keyMap[key].GAMEPAD[index].BUTTON_ID === 0) {
+              _this4.keyMap[key].GAMEPAD[index].ACTIVE = isButtonPressed(gamepad, _this4.keyMap[key].GAMEPAD[index].BUTTON_ID);
             }
 
             // Check if we are an axis
-            if (_this5.keyMap[key].GAMEPAD[index].JOYSTICK.AXIS_ID !== undefined && _this5.keyMap[key].GAMEPAD[index].JOYSTICK.IS_POSITIVE !== undefined) {
-              if (_this5.keyMap[key].GAMEPAD[index].JOYSTICK.IS_POSITIVE) {
-                _this5.keyMap[key].GAMEPAD[index].ACTIVE = getAnalogStickAxis(gamepad, _this5.keyMap[key].GAMEPAD[index].JOYSTICK.AXIS_ID) > +_this5.gamepadAnalogStickDeadZone;
+            if (_this4.keyMap[key].GAMEPAD[index].JOYSTICK.AXIS_ID !== undefined && _this4.keyMap[key].GAMEPAD[index].JOYSTICK.IS_POSITIVE !== undefined) {
+              if (_this4.keyMap[key].GAMEPAD[index].JOYSTICK.IS_POSITIVE) {
+                _this4.keyMap[key].GAMEPAD[index].ACTIVE = getAnalogStickAxis(gamepad, _this4.keyMap[key].GAMEPAD[index].JOYSTICK.AXIS_ID) > +_this4.gamepadAnalogStickDeadZone;
               } else {
-                _this5.keyMap[key].GAMEPAD[index].ACTIVE = getAnalogStickAxis(gamepad, _this5.keyMap[key].GAMEPAD[index].JOYSTICK.AXIS_ID) < -_this5.gamepadAnalogStickDeadZone;
+                _this4.keyMap[key].GAMEPAD[index].ACTIVE = getAnalogStickAxis(gamepad, _this4.keyMap[key].GAMEPAD[index].JOYSTICK.AXIS_ID) < -_this4.gamepadAnalogStickDeadZone;
               }
             }
           });
@@ -509,16 +533,16 @@ var ResponsiveGamepadService = function () {
   }, {
     key: 'updateTouchpadRect',
     value: function updateTouchpadRect() {
-      var _this6 = this;
+      var _this5 = this;
 
       // Read from the DOM, and get each of our elements position, doing this here, as it is best to read from the dom in sequence
       // use element.getBoundingRect() top, bottom, left, right to get clientX and clientY in touch events :)
       // https://stackoverflow.com/questions/442404/retrieve-the-position-x-y-of-an-html-element
       //console.log("GamepadComponent: Updating Rect()...");
       this.keyMapKeys.forEach(function (key) {
-        _this6.keyMap[key].TOUCHPAD.forEach(function (touchInput, index) {
-          var boundingRect = _this6.keyMap[key].TOUCHPAD[index].ELEMENT.getBoundingClientRect();
-          _this6.keyMap[key].TOUCHPAD[index].BOUNDING_RECT = boundingRect;
+        _this5.keyMap[key].TOUCHPAD.forEach(function (touchInput, index) {
+          var boundingRect = _this5.keyMap[key].TOUCHPAD[index].ELEMENT.getBoundingClientRect();
+          _this5.keyMap[key].TOUCHPAD[index].BOUNDING_RECT = boundingRect;
         });
       });
     }
@@ -528,12 +552,12 @@ var ResponsiveGamepadService = function () {
   }, {
     key: 'resetTouchDpad',
     value: function resetTouchDpad() {
-      var _this7 = this;
+      var _this6 = this;
 
       var dpadKeys = ['UP', 'RIGHT', 'DOWN', 'LEFT'];
 
       dpadKeys.forEach(function (dpadKey) {
-        _this7.keyMap[dpadKey].TOUCHPAD.forEach(function (touchInput) {
+        _this6.keyMap[dpadKey].TOUCHPAD.forEach(function (touchInput) {
           touchInput.ACTIVE = false;
         });
       });
@@ -544,6 +568,10 @@ var ResponsiveGamepadService = function () {
   }, {
     key: 'updateTouchpad',
     value: function updateTouchpad(keyMapKey, touchInput, event) {
+
+      if (!this.enabled) {
+        return;
+      }
 
       if (!event || event.type.includes('touch') && !event.touches) return;
 
@@ -643,4 +671,4 @@ var ResponsiveGamepadService = function () {
 
 var ResponsiveGamepad = new ResponsiveGamepadService();
 
-export { ResponsiveGamepad, KEYMAP as DEFAULT_KEYMAP, KEYMAP as GAMEBOY_KEYMAP };
+export { ResponsiveGamepad, KEYMAP as KEYMAP_DEFAULT, KEYMAP as KEYMAP_GAMEBOY };
