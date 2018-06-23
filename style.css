@@ -10,10 +10,24 @@ h1 {
 	text-align: center;
 }
 
-.addRemoveTouch {
-	background-color: rgba(116, 124, 232, 0.55);
+.githubLink {
+	text-align: center;
+}
+
+.gamepadState {
+	background-color: rgba(116, 199, 232, 0.55);
+
 	margin-top: 10px;
 	margin-bottom: 10px;
+	padding: 10px;
+}
+
+.addRemoveTouch {
+	background-color: rgba(116, 124, 232, 0.55);
+
+	margin-top: 10px;
+	margin-bottom: 10px;
+	padding: 10px;
 }
 
 .addRemoveTouch button {
@@ -22,8 +36,11 @@ h1 {
 
 .preventDefault {
 	height: 2000px;
-	padding: 20px;
 	background-color: rgba(199,116,232, 0.55);
+
+	margin-top: 10px;
+	margin-bottom: 10px;
+	padding: 10px;
 }
 
 .gamepad {

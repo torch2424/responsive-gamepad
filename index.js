@@ -67,12 +67,19 @@ export default class App extends Component {
 	render() {
 		return (
 			<div>
-        <h1>Responsive Gamepad State:</h1>
-        <pre id="gamepadState">
-        </pre>
+				<h1>Responsive Gamepad</h1>
+				<div class="githubLink">
+					<a href="https://github.com/torch2424/responsive-gamepad">Fork me on github</a>
+				</div>
+
+				<div class="gamepadState">
+					<h3>Responsive Gamepad State:</h3>
+					<pre id="gamepadState">
+					</pre>
+				</div>
 
 				<div class="addRemoveTouch">
-					<h2>Dynamic Touch Input</h2>
+					<h3>Dynamic Touch Input</h3>
 					<p>Touch inputs can be added/removed on the fly!</p>
 					<div>
 						<button onClick={() => this.toggleTouchSelectInput()} >
