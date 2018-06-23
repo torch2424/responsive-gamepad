@@ -91,9 +91,9 @@ export default class App extends Component {
 					<button onClick={() => {console.log('I was the button your pressed a key on.')}}>Press space on me, and check your logs!</button>
 					<br />
 					<select>
-					  <option value="use">use</option>
-					  <option value="arrow">arrow</option>
-					  <option value="keys">keys</option>
+						<option value="use">use arrow keys once selected</option>
+						<option value="arrow">use arrow keys once selected</option>
+						<option value="keys">use arrow keys once selected</option>
 					</select>
 				</div>
 
