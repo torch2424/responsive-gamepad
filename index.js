@@ -4,6 +4,14 @@ import { ResponsiveGamepad, DEFAULT_KEYMAP } from './dist/responsive-gamepad.esm
 
 export default class App extends Component {
 
+	constructor() {
+		super();
+
+		this.setState({
+			touchSelectId: undefined
+		});
+	}
+
 	// Using componentDidMount to wait for the canvas element to be inserted in DOM
 	componentDidMount() {
     // Initialize our gamepad
@@ -12,7 +20,6 @@ export default class App extends Component {
 		// Add our touch inputs
 		const dpadElement = document.getElementById('gamepadDpad');
 		const startElement = document.getElementById('gamepadStart');
-		const selectElement = document.getElementById('gamepadSelect');
 		const aElement = document.getElementById('gamepadA');
 		const bElement = document.getElementById('gamepadB');
 
@@ -23,7 +30,8 @@ export default class App extends Component {
 		ResponsiveGamepad.addTouchInput('A', aElement, 'BUTTON');
 		ResponsiveGamepad.addTouchInput('B', bElement, 'BUTTON');
 		ResponsiveGamepad.addTouchInput('START', startElement, 'BUTTON');
-		ResponsiveGamepad.addTouchInput('SELECT', selectElement, 'BUTTON');
+
+		this.toggleTouchSelectInput();
 
     requestAnimationFrame(() => {
       this.displayGamepadState();
@@ -37,7 +45,24 @@ export default class App extends Component {
     requestAnimationFrame(() => {
       this.displayGamepadState();
     });
-  }
+	}
+
+	toggleTouchSelectInput() {
+		if (this.state.touchSelectId) {
+			ResponsiveGamepad.removeTouchInput('SELECT', this.state.touchSelectId);
+			this.setState({
+				touchSelectId: undefined
+			});
+		} else {
+
+			const selectElement = document.getElementById('gamepadSelect');
+			const touchSelectId = ResponsiveGamepad.addTouchInput('SELECT', selectElement, 'BUTTON');
+
+			this.setState({
+				touchSelectId: touchSelectId
+			});
+		}
+	}
 
 	render() {
 		return (
@@ -45,6 +70,16 @@ export default class App extends Component {
         <h1>Responsive Gamepad State:</h1>
         <pre id="gamepadState">
         </pre>
+
+				<div class="addRemoveTouch">
+					<h2>Dynamic Touch Input</h2>
+					<p>Touch inputs can be added/removed on the fly!</p>
+					<div>
+						<button onClick={() => this.toggleTouchSelectInput()} >
+							{this.state.touchSelectId ? `Disable SELECT Touch Input (current Id: ${this.state.touchSelectId})` : 'Enable SELECT Touch Input'}
+						</button>
+					</div>
+				</div>
 
 				<div class="preventDefault">
 					<h3>I am very tall to show off `event.preventDefault()`. E.g arrow keys wont scroll if in the keymap</h3>

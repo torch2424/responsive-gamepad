@@ -10,6 +10,16 @@ h1 {
 	text-align: center;
 }
 
+.addRemoveTouch {
+	background-color: rgba(116, 124, 232, 0.55);
+	margin-top: 10px;
+	margin-bottom: 10px;
+}
+
+.addRemoveTouch button {
+	background-color: aliceblue;
+}
+
 .preventDefault {
 	height: 2000px;
 	padding: 20px;

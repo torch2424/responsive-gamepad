@@ -4,12 +4,14 @@ Object.defineProperty(exports, '__esModule', { value: true });
 
 // Define a keyboard key schema
 var keyInputSchema = {
+  ID: undefined,
   ACTIVE: false,
   KEY_CODE: undefined
 
   // Define a gamepad button schema
   // https://w3c.github.io/gamepad/#remapping
 };var gamepadInputSchema = {
+  ID: undefined,
   ACTIVE: false,
   BUTTON_ID: undefined,
   JOYSTICK: {
@@ -19,6 +21,7 @@ var keyInputSchema = {
 };
 
 var touchInputSchema = {
+  ID: undefined,
   ACTIVE: false,
   ELEMENT: undefined,
   TYPE: undefined,
@@ -68,16 +71,29 @@ var touchInputSchema = {
     GAMEPAD: [],
     TOUCHPAD: []
   }
-};
+
+  // Function to return an ID for our input
+  // https://stackoverflow.com/questions/6860853/generate-random-string-for-div-id
+};function getInputId() {
+
+  var idGenerator = function idGenerator() {
+    return Math.random().toString(36).replace(/[^a-z]+/g, '').substr(2, 10);
+  };
+
+  var stringId = "" + idGenerator() + idGenerator();
+  return stringId.slice();
+}
 
 function getKeyInput(keyCode) {
   var input = Object.assign({}, keyInputSchema);
+  input.ID = getInputId();
   input.KEY_CODE = keyCode;
   return input;
 }
 
 function getGamepadInput(gamepadButtonId, axisId, axisIsPositive) {
   var input = Object.assign({}, gamepadInputSchema);
+  input.ID = getInputId();
   input.JOYSTICK = Object.assign({}, gamepadInputSchema.JOYSTICK);
   if (gamepadButtonId || gamepadButtonId === 0) {
     input.BUTTON_ID = gamepadButtonId;
@@ -90,6 +106,8 @@ function getGamepadInput(gamepadButtonId, axisId, axisIsPositive) {
 
 function getTouchInput(element, type, direction, eventHandler) {
   var input = Object.assign({}, touchInputSchema);
+
+  input.ID = getInputId();
 
   // TODO: Check the type for a valid type
 
@@ -319,6 +337,32 @@ var ResponsiveGamepadService = function () {
 
       // Add the input to our keymap
       this.keyMap[keyMapKey].TOUCHPAD.push(touchInput);
+
+      // Return the touchInput ID so that is may be removed later
+      return touchInput.ID;
+    }
+  }, {
+    key: 'removeTouchInput',
+    value: function removeTouchInput(keyMapKey, touchInputId) {
+      // Search for the input in our touch pad for every key
+      var touchInputIndex = undefined;
+
+      this.keyMap[keyMapKey].TOUCHPAD.some(function (input, index) {
+        if (input.ID === touchInputId) {
+          touchInputIndex = index;
+          return true;
+        }
+
+        return false;
+      });
+
+      // If we found the key and index, remove the touch input
+      if (touchInputIndex !== undefined) {
+        this.keyMap[keyMapKey].TOUCHPAD.splice(touchInputIndex, 1);
+        return true;
+      }
+
+      return false;
     }
   }, {
     key: 'getState',
