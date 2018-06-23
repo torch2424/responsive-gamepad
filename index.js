@@ -19,7 +19,10 @@ export default class App extends Component {
 
   displayGamepadState() {
     const gamepadStateElement = document.getElementById("gamepadState");
-		gamepadStateElement.innerHTML = JSON.stringify(ResponsiveGamepad.getState(), null, 4);
+		this.setState({
+			...this.state,
+			gamepadState: JSON.stringify(ResponsiveGamepad.getState(), null, 4)
+		})
 
     requestAnimationFrame(() => {
       this.displayGamepadState();
@@ -97,7 +100,9 @@ export default class App extends Component {
 				<div class="gamepadState">
 					<h3>Responsive Gamepad State:</h3>
 					<div>Enabled: {ResponsiveGamepad.isEnabled().toString()}</div>
+					<div>Is Ignoring Keyboard Input from Focusing on Input Element: {ResponsiveGamepad.isIgnoringKeyEvents().toString()}</div>
 					<pre id="gamepadState">
+						{this.state.gamepadState}
 					</pre>
 				</div>
 

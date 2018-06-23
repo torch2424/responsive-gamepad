@@ -441,6 +441,19 @@ var ResponsiveGamepadService = function () {
       return controllerState;
     }
 
+    // Function to return if we are ignoring input for key events
+
+  }, {
+    key: 'isIgnoringKeyEvents',
+    value: function isIgnoringKeyEvents() {
+      return INPUT_HTML_TAGS.some(function (htmlTag) {
+        if (document.activeElement && document.activeElement.tagName.toLowerCase() === htmlTag.toLowerCase()) {
+          return true;
+        }
+        return false;
+      });
+    }
+
     // Function to handle keyboard update events
 
   }, {
