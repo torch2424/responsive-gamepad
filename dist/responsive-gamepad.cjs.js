@@ -302,15 +302,7 @@ var ResponsiveGamepadService = function () {
     this.keyMapKeys = Object.keys(KeyMapSchema());
     this.keyMap = KEYMAP();
     this.enabled = false;
-
-    // Add our key event listeners
-    // Wrapping in this for preact prerender
-    if (typeof window !== "undefined") {
-      window.addEventListener('keyup', this.updateKeyboard.bind(this));
-      window.addEventListener('keydown', this.updateKeyboard.bind(this));
-      // Add a resize listen to update the gamepad rect on resize
-      window.addEventListener("resize", this.updateTouchpadRect.bind(this));
-    }
+    this.addedEventListeners = false;
   }
 
   createClass(ResponsiveGamepadService, [{
@@ -320,6 +312,17 @@ var ResponsiveGamepadService = function () {
       // TODO: Verify it is a valid keymap passed
       if (keyMap) {
         this.keyMap = keyMap;
+      }
+
+      // Add our key event listeners
+      // Wrapping in this for preact prerender
+      if (!this.addedEventListeners && typeof window !== "undefined") {
+        window.addEventListener('keyup', this.updateKeyboard.bind(this));
+        window.addEventListener('keydown', this.updateKeyboard.bind(this));
+        // Add a resize listen to update the gamepad rect on resize
+        window.addEventListener("resize", this.updateTouchpadRect.bind(this));
+
+        this.addedEventListeners = true;
       }
 
       this.enabled = true;
@@ -445,6 +448,7 @@ var ResponsiveGamepadService = function () {
     key: 'isIgnoringKeyEvents',
     value: function isIgnoringKeyEvents() {
 
+      // Checking for window for preact prerender
       if (typeof window === "undefined") {
         return true;
       }
@@ -468,6 +472,7 @@ var ResponsiveGamepadService = function () {
         return;
       }
 
+      // Checking for window for preact prerender
       if (typeof window === "undefined") {
         return;
       }

@@ -94,7 +94,7 @@ export default class App extends Component {
 			<div>
 				<h1>Responsive Gamepad</h1>
 				<div class="githubLink">
-					<a href="https://github.com/torch2424/responsive-gamepad">Fork me on github</a>
+					<a href="https://github.com/torch2424/responsive-gamepad" target="_blank">Fork me on github</a>
 				</div>
 
 				<div class="gamepadState">
