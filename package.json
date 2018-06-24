@@ -13,7 +13,7 @@
     "demo:watch": "preact watch",
     "demo:build": "preact build",
     "demo:build:serve": "npm run demo:build && preact serve --cwd docs",
-    "demo:deploy": "npm run demo:build && npx gh-pages -d build",
+    "demo:deploy": "npm run lib:build && npm run demo:build && npx gh-pages -d build",
     "lib:watch": "npx rollup -c -w",
     "lib:build": "npx rollup -c",
     "lib:deploy": "npm run lib:build && npx np",
