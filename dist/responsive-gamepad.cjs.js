@@ -29,58 +29,38 @@ var touchInputSchema = {
   EVENT_HANDLER: undefined,
   BOUNDING_RECT: undefined
 
-  // Define our finaly kerboard schema here
-};var keyMapSchema = {
-  UP: {
-    KEYBOARD: [],
-    GAMEPAD: [],
-    TOUCHPAD: []
-  },
-  RIGHT: {
-    KEYBOARD: [],
-    GAMEPAD: [],
-    TOUCHPAD: []
-  },
-  DOWN: {
-    KEYBOARD: [],
-    GAMEPAD: [],
-    TOUCHPAD: []
-  },
-  LEFT: {
-    KEYBOARD: [],
-    GAMEPAD: [],
-    TOUCHPAD: []
-  },
-  A: {
-    KEYBOARD: [],
-    GAMEPAD: [],
-    TOUCHPAD: []
-  },
-  B: {
-    KEYBOARD: [],
-    GAMEPAD: [],
-    TOUCHPAD: []
-  },
-  SELECT: {
-    KEYBOARD: [],
-    GAMEPAD: [],
-    TOUCHPAD: []
-  },
-  START: {
-    KEYBOARD: [],
-    GAMEPAD: [],
-    TOUCHPAD: []
-  }
+  // Define our keymap keys
+};var responsiveGamepadKeys = {
+  DPAD_UP: 'DPAD_UP',
+  DPAD_RIGHT: 'DPAD_RIGHT',
+  DPAD_DOWN: 'DPAD_DOWN',
+  DPAD_LEFT: 'DPAD_LEFT',
+  A: 'A',
+  B: 'B',
+  X: 'X',
+  Y: 'Y',
+  SELECT: 'SELECT',
+  START: 'START'
 
-  // Function to return an ID for our input
-  // https://stackoverflow.com/questions/6860853/generate-random-string-for-div-id
-};function getInputId() {
+  // Define our finaly kerboard schema here
+};var keyMapSchema = {};
+Object.keys(responsiveGamepadKeys).forEach(function (key) {
+  keyMapSchema[key] = {
+    KEYBOARD: [],
+    GAMEPAD: [],
+    TOUCHPAD: []
+  };
+});
+
+// Function to return an ID for our input
+// https://stackoverflow.com/questions/6860853/generate-random-string-for-div-id
+function getInputId() {
 
   var idGenerator = function idGenerator() {
     return Math.random().toString(36).replace(/[^a-z]+/g, '').substr(2, 10);
   };
 
-  var stringId = "" + idGenerator() + idGenerator();
+  var stringId = '' + idGenerator() + idGenerator();
   return stringId.slice();
 }
 
@@ -104,43 +84,49 @@ function getGamepadInput(gamepadButtonId, axisId, axisIsPositive) {
   return input;
 }
 
-function getTouchInput(element, type, direction, eventHandler) {
-  var input = Object.assign({}, touchInputSchema);
+function getTouchInput(element, eventHandler, inputType) {
+  var touchInput = Object.assign({}, touchInputSchema);
 
-  input.ID = getInputId();
+  touchInput.ID = getInputId();
 
   // TODO: Check the type for a valid type
 
   // Add our passed parameters
-  input.ELEMENT = element;
-  input.TYPE = type;
-  input.DIRECTION = direction;
-  input.EVENT_HANDLER = eventHandler;
+  touchInput.ELEMENT = element;
+  touchInput.EVENT_HANDLER = eventHandler;
+  touchInput.TYPE = inputType;
+
+  // If DPAD type, get the direction
+  if (touchInput.TYPE === 'DPAD') {
+    touchInput.DIRECTION = arguments[3];
+  }
 
   // Add our bounding rect
-  var boundingRect = input.ELEMENT.getBoundingClientRect();
-  input.BOUNDING_RECT = boundingRect;
+  var boundingRect = touchInput.ELEMENT.getBoundingClientRect();
+  touchInput.BOUNDING_RECT = boundingRect;
 
   // Define our eventListener functions
   var eventListenerCallback = function eventListenerCallback(event) {
-    if (input.EVENT_HANDLER) {
-      input.EVENT_HANDLER(event);
+    if (touchInput.EVENT_HANDLER) {
+      touchInput.EVENT_HANDLER(touchInput, event);
     }
   };
 
   // Add event listeners to the element
-  input.ELEMENT.addEventListener("touchstart", eventListenerCallback);
-  input.ELEMENT.addEventListener("touchmove", eventListenerCallback);
-  input.ELEMENT.addEventListener("touchend", eventListenerCallback);
-  input.ELEMENT.addEventListener("mousedown", eventListenerCallback);
-  input.ELEMENT.addEventListener("mouseup", eventListenerCallback);
+  touchInput.ELEMENT.addEventListener("touchstart", eventListenerCallback);
+  touchInput.ELEMENT.addEventListener("touchmove", eventListenerCallback);
+  touchInput.ELEMENT.addEventListener("touchend", eventListenerCallback);
+  touchInput.ELEMENT.addEventListener("mousedown", eventListenerCallback);
+  touchInput.ELEMENT.addEventListener("mouseup", eventListenerCallback);
 
-  return input;
+  return touchInput;
 }
 
 function KeyMapSchema() {
   return Object.assign({}, keyMapSchema);
 }
+
+var RESPONSIVE_GAMEPAD_KEYS = responsiveGamepadKeys;
 
 var Key = {
 
@@ -189,70 +175,76 @@ var Key = {
 
 var keymap = KeyMapSchema();
 
-// Up
-keymap.UP.KEYBOARD.push(getKeyInput(Key.ARROW_UP));
-keymap.UP.KEYBOARD.push(getKeyInput(Key.W));
-keymap.UP.KEYBOARD.push(getKeyInput(Key.NUMPAD_8));
-keymap.UP.GAMEPAD.push(getGamepadInput(12));
-keymap.UP.GAMEPAD.push(getGamepadInput(false, 1, false));
-keymap.UP.GAMEPAD.push(getGamepadInput(false, 3, false));
-
-// Right
-keymap.RIGHT.KEYBOARD.push(getKeyInput(Key.ARROW_RIGHT));
-keymap.RIGHT.KEYBOARD.push(getKeyInput(Key.D));
-keymap.RIGHT.KEYBOARD.push(getKeyInput(Key.NUMPAD_6));
-keymap.RIGHT.GAMEPAD.push(getGamepadInput(15));
-keymap.RIGHT.GAMEPAD.push(getGamepadInput(false, 0, true));
-keymap.RIGHT.GAMEPAD.push(getGamepadInput(false, 2, true));
-
-// Down
-keymap.DOWN.KEYBOARD.push(getKeyInput(Key.ARROW_DOWN));
-keymap.DOWN.KEYBOARD.push(getKeyInput(Key.S));
-keymap.DOWN.KEYBOARD.push(getKeyInput(Key.NUMPAD_5));
-keymap.DOWN.KEYBOARD.push(getKeyInput(Key.NUMPAD_2));
-keymap.DOWN.GAMEPAD.push(getGamepadInput(13));
-keymap.DOWN.GAMEPAD.push(getGamepadInput(false, 1, true));
-keymap.DOWN.GAMEPAD.push(getGamepadInput(false, 3, true));
-
-// Left
-keymap.LEFT.KEYBOARD.push(getKeyInput(Key.ARROW_LEFT));
-keymap.LEFT.KEYBOARD.push(getKeyInput(Key.A));
-keymap.LEFT.KEYBOARD.push(getKeyInput(Key.NUMPAD_4));
-keymap.LEFT.GAMEPAD.push(getGamepadInput(14));
-keymap.LEFT.GAMEPAD.push(getGamepadInput(false, 0, false));
-keymap.LEFT.GAMEPAD.push(getGamepadInput(false, 2, false));
-
-// A
-keymap.A.KEYBOARD.push(getKeyInput(Key.X));
-keymap.A.KEYBOARD.push(getKeyInput(Key.SEMI_COLON));
-keymap.A.KEYBOARD.push(getKeyInput(Key.NUMPAD_7));
-keymap.A.GAMEPAD.push(getGamepadInput(0));
-keymap.A.GAMEPAD.push(getGamepadInput(1));
-
-// B
-keymap.B.KEYBOARD.push(getKeyInput(Key.Z));
-keymap.B.KEYBOARD.push(getKeyInput(Key.ESCAPE));
-keymap.B.KEYBOARD.push(getKeyInput(Key.SINGLE_QUOTE));
-keymap.B.KEYBOARD.push(getKeyInput(Key.BACKSPACE));
-keymap.B.KEYBOARD.push(getKeyInput(Key.NUMPAD_9));
-keymap.B.GAMEPAD.push(getGamepadInput(2));
-keymap.B.GAMEPAD.push(getGamepadInput(3));
-
-// Start
-keymap.START.KEYBOARD.push(getKeyInput(Key.RETURN));
-keymap.START.KEYBOARD.push(getKeyInput(Key.SPACE));
-keymap.START.KEYBOARD.push(getKeyInput(Key.NUMPAD_3));
-keymap.START.GAMEPAD.push(getGamepadInput(9));
-
-// Select
-keymap.SELECT.KEYBOARD.push(getKeyInput(Key.SHIFT));
-keymap.SELECT.KEYBOARD.push(getKeyInput(Key.TAB));
-keymap.SELECT.KEYBOARD.push(getKeyInput(Key.BACK_SLASH));
-keymap.SELECT.KEYBOARD.push(getKeyInput(Key.NUMPAD_1));
-keymap.SELECT.GAMEPAD.push(getGamepadInput(8));
-
 var KEYMAP = function KEYMAP() {
   return JSON.parse(JSON.stringify(keymap));
+};
+
+var keymap$1 = KeyMapSchema();
+
+// Dpad Up
+keymap$1.DPAD_UP.KEYBOARD.push(getKeyInput(Key.ARROW_UP));
+keymap$1.DPAD_UP.KEYBOARD.push(getKeyInput(Key.W));
+keymap$1.DPAD_UP.KEYBOARD.push(getKeyInput(Key.NUMPAD_8));
+keymap$1.DPAD_UP.GAMEPAD.push(getGamepadInput(12));
+keymap$1.DPAD_UP.GAMEPAD.push(getGamepadInput(false, 1, false));
+keymap$1.DPAD_UP.GAMEPAD.push(getGamepadInput(false, 3, false));
+
+// Dpad Right
+keymap$1.DPAD_RIGHT.KEYBOARD.push(getKeyInput(Key.ARROW_RIGHT));
+keymap$1.DPAD_RIGHT.KEYBOARD.push(getKeyInput(Key.D));
+keymap$1.DPAD_RIGHT.KEYBOARD.push(getKeyInput(Key.NUMPAD_6));
+keymap$1.DPAD_RIGHT.GAMEPAD.push(getGamepadInput(15));
+keymap$1.DPAD_RIGHT.GAMEPAD.push(getGamepadInput(false, 0, true));
+keymap$1.DPAD_RIGHT.GAMEPAD.push(getGamepadInput(false, 2, true));
+
+// Dpad Down
+keymap$1.DPAD_DOWN.KEYBOARD.push(getKeyInput(Key.ARROW_DOWN));
+keymap$1.DPAD_DOWN.KEYBOARD.push(getKeyInput(Key.S));
+keymap$1.DPAD_DOWN.KEYBOARD.push(getKeyInput(Key.NUMPAD_5));
+keymap$1.DPAD_DOWN.KEYBOARD.push(getKeyInput(Key.NUMPAD_2));
+keymap$1.DPAD_DOWN.GAMEPAD.push(getGamepadInput(13));
+keymap$1.DPAD_DOWN.GAMEPAD.push(getGamepadInput(false, 1, true));
+keymap$1.DPAD_DOWN.GAMEPAD.push(getGamepadInput(false, 3, true));
+
+// Dpad Left
+keymap$1.DPAD_LEFT.KEYBOARD.push(getKeyInput(Key.ARROW_LEFT));
+keymap$1.DPAD_LEFT.KEYBOARD.push(getKeyInput(Key.A));
+keymap$1.DPAD_LEFT.KEYBOARD.push(getKeyInput(Key.NUMPAD_4));
+keymap$1.DPAD_LEFT.GAMEPAD.push(getGamepadInput(14));
+keymap$1.DPAD_LEFT.GAMEPAD.push(getGamepadInput(false, 0, false));
+keymap$1.DPAD_LEFT.GAMEPAD.push(getGamepadInput(false, 2, false));
+
+// A
+keymap$1.A.KEYBOARD.push(getKeyInput(Key.X));
+keymap$1.A.KEYBOARD.push(getKeyInput(Key.SEMI_COLON));
+keymap$1.A.KEYBOARD.push(getKeyInput(Key.NUMPAD_7));
+keymap$1.A.GAMEPAD.push(getGamepadInput(0));
+keymap$1.A.GAMEPAD.push(getGamepadInput(1));
+
+// B
+keymap$1.B.KEYBOARD.push(getKeyInput(Key.Z));
+keymap$1.B.KEYBOARD.push(getKeyInput(Key.ESCAPE));
+keymap$1.B.KEYBOARD.push(getKeyInput(Key.SINGLE_QUOTE));
+keymap$1.B.KEYBOARD.push(getKeyInput(Key.BACKSPACE));
+keymap$1.B.KEYBOARD.push(getKeyInput(Key.NUMPAD_9));
+keymap$1.B.GAMEPAD.push(getGamepadInput(2));
+keymap$1.B.GAMEPAD.push(getGamepadInput(3));
+
+// Start
+keymap$1.START.KEYBOARD.push(getKeyInput(Key.RETURN));
+keymap$1.START.KEYBOARD.push(getKeyInput(Key.SPACE));
+keymap$1.START.KEYBOARD.push(getKeyInput(Key.NUMPAD_3));
+keymap$1.START.GAMEPAD.push(getGamepadInput(9));
+
+// Select
+keymap$1.SELECT.KEYBOARD.push(getKeyInput(Key.SHIFT));
+keymap$1.SELECT.KEYBOARD.push(getKeyInput(Key.TAB));
+keymap$1.SELECT.KEYBOARD.push(getKeyInput(Key.BACK_SLASH));
+keymap$1.SELECT.KEYBOARD.push(getKeyInput(Key.NUMPAD_1));
+keymap$1.SELECT.GAMEPAD.push(getGamepadInput(8));
+
+var KEYMAP$1 = function KEYMAP() {
+  return JSON.parse(JSON.stringify(keymap$1));
 };
 
 var classCallCheck = function (instance, Constructor) {
@@ -278,6 +270,16 @@ var createClass = function () {
     return Constructor;
   };
 }();
+
+var toConsumableArray = function (arr) {
+  if (Array.isArray(arr)) {
+    for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) arr2[i] = arr[i];
+
+    return arr2;
+  } else {
+    return Array.from(arr);
+  }
+};
 
 // HTML Tags that can be focused on, where the library should be disabled
 // https://www.w3schools.com/tags/ref_byfunc.asp
@@ -344,15 +346,23 @@ var ResponsiveGamepadService = function () {
     }
   }, {
     key: 'addTouchInput',
-    value: function addTouchInput(keyMapKey, element, type, direction) {
+    value: function addTouchInput(keyMapKey, element, inputType) {
       var _this = this;
+
+      // Create our touch handler
+      var touchHandler = function touchHandler(touchInput, event) {
+        _this.updateTouchpad(keyMapKey, touchInput, event);
+      };
+
+      // Create the arguments that will be passed to getTouchInput,
+      // Last element is a spread of any additional passed arguments
+      var originalArguments = [].concat(Array.prototype.slice.call(arguments));
+      var touchInputArguments = [element, touchHandler, inputType].concat(toConsumableArray(originalArguments.slice(3)));
 
       // Declare our touch input
       // TODO: May have to add the event handler after getting the input
       var touchInput = void 0;
-      touchInput = getTouchInput(element, type, direction, function (event) {
-        _this.updateTouchpad(keyMapKey, touchInput, event);
-      });
+      touchInput = getTouchInput.apply(undefined, toConsumableArray(touchInputArguments));
 
       // Add the input to our keymap
       this.keyMap[keyMapKey].TOUCHPAD.push(touchInput);
@@ -585,7 +595,7 @@ var ResponsiveGamepadService = function () {
     value: function resetTouchDpad() {
       var _this6 = this;
 
-      var dpadKeys = ['UP', 'RIGHT', 'DOWN', 'LEFT'];
+      var dpadKeys = [RESPONSIVE_GAMEPAD_KEYS.DPAD_UP, RESPONSIVE_GAMEPAD_KEYS.DPAD_RIGHT, RESPONSIVE_GAMEPAD_KEYS.DPAD_DOWN, RESPONSIVE_GAMEPAD_KEYS.DPAD_LEFT];
 
       dpadKeys.forEach(function (dpadKey) {
         _this6.keyMap[dpadKey].TOUCHPAD.forEach(function (touchInput) {
@@ -703,5 +713,6 @@ var ResponsiveGamepadService = function () {
 var ResponsiveGamepad = new ResponsiveGamepadService();
 
 exports.ResponsiveGamepad = ResponsiveGamepad;
+exports.RESPONSIVE_GAMEPAD_KEYS = RESPONSIVE_GAMEPAD_KEYS;
 exports.KEYMAP_DEFAULT = KEYMAP;
-exports.KEYMAP_GAMEBOY = KEYMAP;
+exports.KEYMAP_GAMEBOY = KEYMAP$1;

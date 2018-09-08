@@ -1,6 +1,6 @@
 import './style';
 import { Component } from 'preact';
-import { ResponsiveGamepad, KEYMAP_DEFAULT, KEYMAP_KEYS } from './dist/responsive-gamepad.esm';
+import { ResponsiveGamepad, RESPONSIVE_GAMEPAD_KEYS, KEYMAP_DEFAULT } from './dist/responsive-gamepad.esm';
 
 export default class App extends Component {
 
@@ -39,13 +39,13 @@ export default class App extends Component {
 		const aElement = document.getElementById('gamepadA');
 		const bElement = document.getElementById('gamepadB');
 
-		ResponsiveGamepad.addTouchInput(KEYMAP_KEYS.DPAD_UP, dpadElement, 'DPAD', 'UP');
-    ResponsiveGamepad.addTouchInput(KEYMAP_KEYS.DPAD_RIGHT, dpadElement, 'DPAD', 'RIGHT');
-    ResponsiveGamepad.addTouchInput(KEYMAP_KEYS.DPAD_DOWN, dpadElement, 'DPAD', 'DOWN');
-    ResponsiveGamepad.addTouchInput(KEYMAP_KEYS.DPAD_LEFT, dpadElement, 'DPAD', 'LEFT');
-    ResponsiveGamepad.addTouchInput(KEYMAP_KEYS.A, aElement, 'BUTTON');
-    ResponsiveGamepad.addTouchInput(KEYMAP_KEYS.B, bElement, 'BUTTON');
-    ResponsiveGamepad.addTouchInput(KEYMAP_KEYS.START, startElement, 'BUTTON');
+    ResponsiveGamepad.addTouchInput(RESPONSIVE_GAMEPAD_KEYS.DPAD_UP, dpadElement, 'DPAD', 'UP');
+    ResponsiveGamepad.addTouchInput(RESPONSIVE_GAMEPAD_KEYS.DPAD_RIGHT, dpadElement, 'DPAD', 'RIGHT');
+    ResponsiveGamepad.addTouchInput(RESPONSIVE_GAMEPAD_KEYS.DPAD_DOWN, dpadElement, 'DPAD', 'DOWN');
+    ResponsiveGamepad.addTouchInput(RESPONSIVE_GAMEPAD_KEYS.DPAD_LEFT, dpadElement, 'DPAD', 'LEFT');
+    ResponsiveGamepad.addTouchInput(RESPONSIVE_GAMEPAD_KEYS.A, aElement, 'BUTTON');
+    ResponsiveGamepad.addTouchInput(RESPONSIVE_GAMEPAD_KEYS.B, bElement, 'BUTTON');
+    ResponsiveGamepad.addTouchInput(RESPONSIVE_GAMEPAD_KEYS.START, startElement, 'BUTTON');
 
 		this.setState({
 			...this.state,
@@ -73,7 +73,7 @@ export default class App extends Component {
 
 	toggleTouchSelectInput() {
 		if (this.state.touchSelectId) {
-      ResponsiveGamepad.removeTouchInput(KEYMAP_KEYS.SELECT, this.state.touchSelectId);
+      ResponsiveGamepad.removeTouchInput(RESPONSIVE_GAMEPAD_KEYS.SELECT, this.state.touchSelectId);
 			this.setState({
 				...this.state,
 				touchSelectId: undefined
@@ -81,7 +81,7 @@ export default class App extends Component {
 		} else {
 
 			const selectElement = document.getElementById('gamepadSelect');
-      const touchSelectId = ResponsiveGamepad.addTouchInput(KEYMAP_KEYS.SELECT, selectElement, 'BUTTON');
+      const touchSelectId = ResponsiveGamepad.addTouchInput(RESPONSIVE_GAMEPAD_KEYS.SELECT, selectElement, 'BUTTON');
 
 			this.setState({
 				touchSelectId: touchSelectId
