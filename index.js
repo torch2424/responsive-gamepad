@@ -92,7 +92,7 @@ export default class App extends Component {
 	render() {
 		return (
 			<div>
-				<h1>Responsive Gamepad</h1>
+				<h1>Responsive Gamepad Demo</h1>
 				<div class="githubLink">
 					<a href="https://github.com/torch2424/responsive-gamepad" target="_blank">Fork me on github</a>
 				</div>
