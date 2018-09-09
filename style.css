@@ -52,12 +52,19 @@ h1 {
 	align-items: flex-end;
 	width: 100%;
 	height: 100%;
-	opacity: 0.5;
 	pointer-events: none;
+  user-select: none;
 }
 
 .gamepad svg {
 	width: 50%;
 	height: 20%;
 	pointer-events: auto;
+
+  background-color: rgba(0,0,0,0.5);
+  fill: #FAFAFA;
+}
+
+.gamepad svg text {
+  font-size: 6px
 }
