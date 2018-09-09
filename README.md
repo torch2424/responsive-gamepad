@@ -1,15 +1,16 @@
-# responsive-gamepad WIP
-Handle Keyboard, Gamepad, and Touch Controls under a single API
+# responsive-gamepad
 
-Proper README Coming soon!
+Handle Keyboard, Gamepad, and Touch Controls under a single API.
 
 [Demo](https://torch2424.github.io/responsive-gamepad/)
 
-# USAGE
+![Responsive Gamepad Demo Screenshot](./assets/readmeDemo.png)
 
-*See the [index.js](./index.js) at the root of the project, for a proper usage, and touch input example*
+# Table Of Contents
 
-**TL;DR**
+# Quick Start
+
+This is a quick **Tl;DR** on installing and using responsive-gamepad:
 
 1. `npm install --save responsive-gamepad`
 
@@ -19,38 +20,25 @@ Proper README Coming soon!
 
 4. `ResponsiveGamepad.getState();`
 
+# Notable Projects
+
+* [WasmBoy](https://github.com/torch2424/wasmBoy) - Gameboy / Gameboy Color Emulator written for Web Assembly using AssemblyScript.
+
+# Instalation
+
+*See the [index.js](./index.js) at the root of the project, for a proper usage, and touch input example*
 
 
-# TODO
+# Contributing
 
-* Support Multiple Players
+Feel free to fork the project, open up a PR, and give any contributions! I'd suggest opening an issue first however, just so everyone is aware and can discuss the proposed changes.
 
-* Full Controller support (X, Y, Triggers, etc...)
+# LICENSE
 
-* Code Cleanup
+LICENSE under [Apache 2.0](https://choosealicense.com/licenses/apache-2.0/)
 
-* Proper Demo
+# Other Notes
 
-# Motivation
+* Touch Input SVGS on the responseive gamepad demo, are [Google Material Icons](https://material.io/tools/icons/?style=baseline)
 
-[WasmBoy](https://github.com/torch2424/wasmBoy)
-
-# Helpful Links
-
-https://w3c.github.io/gamepad/#remapping
-
-https://css-tricks.com/snippets/javascript/javascript-keycodes/
-
-https://material.io/icons/#ic_gamepad
-
-https://github.com/torch2424/picoDeploy/tree/master/src/components/gamepad
-
-https://github.com/torch2424/picoDeploy/blob/master/src/components/gamepad/gamepad.ts
-
-https://msdn.microsoft.com/en-us/library/windows/desktop/ee417014(v=vs.85).aspx
-
-https://www.reddit.com/r/pcgaming/comments/4zlbrx/what_is_the_difference_between_directinput_and/
-
-https://stackoverflow.com/questions/41251051/is-the-html5-gamepad-api-limited-to-only-4-controllers
-
-https://www.npmjs.com/package/gh-pages
+* XInput vs. DirectInput - [Microsoft Article](https://docs.microsoft.com/en-us/windows/desktop/xinput/xinput-and-directinput), [Reddit thread](https://www.reddit.com/r/pcgaming/comments/4zlbrx/what_is_the_difference_between_directinput_and/)_
