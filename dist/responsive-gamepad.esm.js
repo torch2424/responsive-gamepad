@@ -1,3 +1,52 @@
+var classCallCheck = function (instance, Constructor) {
+  if (!(instance instanceof Constructor)) {
+    throw new TypeError("Cannot call a class as a function");
+  }
+};
+
+var createClass = function () {
+  function defineProperties(target, props) {
+    for (var i = 0; i < props.length; i++) {
+      var descriptor = props[i];
+      descriptor.enumerable = descriptor.enumerable || false;
+      descriptor.configurable = true;
+      if ("value" in descriptor) descriptor.writable = true;
+      Object.defineProperty(target, descriptor.key, descriptor);
+    }
+  }
+
+  return function (Constructor, protoProps, staticProps) {
+    if (protoProps) defineProperties(Constructor.prototype, protoProps);
+    if (staticProps) defineProperties(Constructor, staticProps);
+    return Constructor;
+  };
+}();
+
+var defineProperty = function (obj, key, value) {
+  if (key in obj) {
+    Object.defineProperty(obj, key, {
+      value: value,
+      enumerable: true,
+      configurable: true,
+      writable: true
+    });
+  } else {
+    obj[key] = value;
+  }
+
+  return obj;
+};
+
+var toConsumableArray = function (arr) {
+  if (Array.isArray(arr)) {
+    for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) arr2[i] = arr[i];
+
+    return arr2;
+  } else {
+    return Array.from(arr);
+  }
+};
+
 // Define a keyboard key schema
 var keyInputSchema = {
   ID: undefined,
@@ -132,6 +181,31 @@ function getTouchInput(element, eventHandler, inputType) {
   touchInput.ELEMENT.addEventListener("mouseup", eventListenerCallback);
 
   return touchInput;
+}
+
+// Helper function for creating new gamepads
+function mergeInputs(baseKey) {
+
+  // Get our extra arguments
+  var originalArguments = [].concat(Array.prototype.slice.call(arguments));
+  var extraArguments = [].concat(toConsumableArray(originalArguments.slice(1)));
+
+  // Create our new merged key
+  var mergedKey = {
+    KEYBOARD: [].concat(toConsumableArray(baseKey.KEYBOARD)),
+    GAMEPAD: [].concat(toConsumableArray(baseKey.GAMEPAD)),
+    TOUCHPAD: [].concat(toConsumableArray(baseKey.TOUCHPAD))
+  };
+
+  extraArguments.forEach(function (key) {
+    mergedKey = {
+      KEYBOARD: [].concat(toConsumableArray(mergedKey.KEYBOARD), toConsumableArray(key.KEYBOARD)),
+      GAMEPAD: [].concat(toConsumableArray(mergedKey.GAMEPAD), toConsumableArray(key.GAMEPAD)),
+      TOUCHPAD: [].concat(toConsumableArray(mergedKey.TOUCHPAD), toConsumableArray(key.TOUCHPAD))
+    };
+  });
+
+  return mergedKey;
 }
 
 var RESPONSIVE_GAMEPAD_KEYS = responsiveGamepadKeys;
@@ -409,55 +483,6 @@ function updateTouchpad(keyMapKey, touchInput, event) {
   }
 }
 
-var classCallCheck = function (instance, Constructor) {
-  if (!(instance instanceof Constructor)) {
-    throw new TypeError("Cannot call a class as a function");
-  }
-};
-
-var createClass = function () {
-  function defineProperties(target, props) {
-    for (var i = 0; i < props.length; i++) {
-      var descriptor = props[i];
-      descriptor.enumerable = descriptor.enumerable || false;
-      descriptor.configurable = true;
-      if ("value" in descriptor) descriptor.writable = true;
-      Object.defineProperty(target, descriptor.key, descriptor);
-    }
-  }
-
-  return function (Constructor, protoProps, staticProps) {
-    if (protoProps) defineProperties(Constructor.prototype, protoProps);
-    if (staticProps) defineProperties(Constructor, staticProps);
-    return Constructor;
-  };
-}();
-
-var defineProperty = function (obj, key, value) {
-  if (key in obj) {
-    Object.defineProperty(obj, key, {
-      value: value,
-      enumerable: true,
-      configurable: true,
-      writable: true
-    });
-  } else {
-    obj[key] = value;
-  }
-
-  return obj;
-};
-
-var toConsumableArray = function (arr) {
-  if (Array.isArray(arr)) {
-    for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) arr2[i] = arr[i];
-
-    return arr2;
-  } else {
-    return Array.from(arr);
-  }
-};
-
 var _Key;
 
 // Keyboard Codes
@@ -578,7 +603,7 @@ keymap.X.KEYBOARD.push(getKeyInput(Key.C));
 keymap.X.GAMEPAD.push(getGamepadInput(2));
 
 // Y
-keymap.X.KEYBOARD.push(getKeyInput(Key.V));
+keymap.Y.KEYBOARD.push(getKeyInput(Key.V));
 keymap.Y.GAMEPAD.push(getGamepadInput(3));
 
 // Left Trigger
@@ -620,71 +645,27 @@ var KEYMAP = function KEYMAP() {
   return JSON.parse(JSON.stringify(keymap));
 };
 
-var keymap$1 = KeyMapSchema();
+var keymap$1 = KEYMAP();
 
-// Dpad Up
-keymap$1.DPAD_UP.KEYBOARD.push(getKeyInput(Key.ARROW_UP));
-keymap$1.DPAD_UP.KEYBOARD.push(getKeyInput(Key.W));
-keymap$1.DPAD_UP.KEYBOARD.push(getKeyInput(Key.NUMPAD_8));
-keymap$1.DPAD_UP.GAMEPAD.push(getGamepadInput(12));
-keymap$1.DPAD_UP.GAMEPAD.push(getGamepadInput(false, 1, false));
-keymap$1.DPAD_UP.GAMEPAD.push(getGamepadInput(false, 3, false));
+// Simply Alias some of our buttons
 
-// Dpad Right
-keymap$1.DPAD_RIGHT.KEYBOARD.push(getKeyInput(Key.ARROW_RIGHT));
-keymap$1.DPAD_RIGHT.KEYBOARD.push(getKeyInput(Key.D));
-keymap$1.DPAD_RIGHT.KEYBOARD.push(getKeyInput(Key.NUMPAD_6));
-keymap$1.DPAD_RIGHT.GAMEPAD.push(getGamepadInput(15));
-keymap$1.DPAD_RIGHT.GAMEPAD.push(getGamepadInput(false, 0, true));
-keymap$1.DPAD_RIGHT.GAMEPAD.push(getGamepadInput(false, 2, true));
+// Analog -> DPAD
+keymap$1.DPAD_UP = mergeInputs(keymap$1.DPAD_UP, keymap$1.LEFT_ANALOG_UP, keymap$1.RIGHT_ANALOG_UP);
+keymap$1.DPAD_RIGHT = mergeInputs(keymap$1.DPAD_RIGHT, keymap$1.LEFT_ANALOG_RIGHT, keymap$1.RIGHT_ANALOG_RIGHT);
+keymap$1.DPAD_LEFT = mergeInputs(keymap$1.DPAD_LEFT, keymap$1.LEFT_ANALOG_LEFT, keymap$1.RIGHT_ANALOG_LEFT);
+keymap$1.DPAD_DOWN = mergeInputs(keymap$1.DPAD_DOWN, keymap$1.LEFT_ANALOG_DOWN, keymap$1.RIGHT_ANALOG_DOWN);
 
-// Dpad Down
-keymap$1.DPAD_DOWN.KEYBOARD.push(getKeyInput(Key.ARROW_DOWN));
-keymap$1.DPAD_DOWN.KEYBOARD.push(getKeyInput(Key.S));
-keymap$1.DPAD_DOWN.KEYBOARD.push(getKeyInput(Key.NUMPAD_5));
-keymap$1.DPAD_DOWN.KEYBOARD.push(getKeyInput(Key.NUMPAD_2));
-keymap$1.DPAD_DOWN.GAMEPAD.push(getGamepadInput(13));
-keymap$1.DPAD_DOWN.GAMEPAD.push(getGamepadInput(false, 1, true));
-keymap$1.DPAD_DOWN.GAMEPAD.push(getGamepadInput(false, 3, true));
+// X/Y -> A/B
+keymap$1.A = mergeInputs(keymap$1.A, keymap$1.X);
+keymap$1.B = mergeInputs(keymap$1.B, keymap$1.Y);
 
-// Dpad Left
-keymap$1.DPAD_LEFT.KEYBOARD.push(getKeyInput(Key.ARROW_LEFT));
-keymap$1.DPAD_LEFT.KEYBOARD.push(getKeyInput(Key.A));
-keymap$1.DPAD_LEFT.KEYBOARD.push(getKeyInput(Key.NUMPAD_4));
-keymap$1.DPAD_LEFT.GAMEPAD.push(getGamepadInput(14));
-keymap$1.DPAD_LEFT.GAMEPAD.push(getGamepadInput(false, 0, false));
-keymap$1.DPAD_LEFT.GAMEPAD.push(getGamepadInput(false, 2, false));
+// Triggers -> A
+keymap$1.A = mergeInputs(keymap$1.A, keymap$1.LEFT_TRIGGER, keymap$1.RIGHT_TRIGGER);
 
-// A
-keymap$1.A.KEYBOARD.push(getKeyInput(Key.X));
-keymap$1.A.KEYBOARD.push(getKeyInput(Key.SEMI_COLON));
-keymap$1.A.KEYBOARD.push(getKeyInput(Key.NUMPAD_7));
-keymap$1.A.GAMEPAD.push(getGamepadInput(0));
-keymap$1.A.GAMEPAD.push(getGamepadInput(1));
+// Bumpers -> B
+keymap$1.B = mergeInputs(keymap$1.B, keymap$1.LEFT_BUMPER, keymap$1.RIGHT_BUMPER);
 
-// B
-keymap$1.B.KEYBOARD.push(getKeyInput(Key.Z));
-keymap$1.B.KEYBOARD.push(getKeyInput(Key.ESCAPE));
-keymap$1.B.KEYBOARD.push(getKeyInput(Key.SINGLE_QUOTE));
-keymap$1.B.KEYBOARD.push(getKeyInput(Key.BACKSPACE));
-keymap$1.B.KEYBOARD.push(getKeyInput(Key.NUMPAD_9));
-keymap$1.B.GAMEPAD.push(getGamepadInput(2));
-keymap$1.B.GAMEPAD.push(getGamepadInput(3));
-
-// Start
-keymap$1.START.KEYBOARD.push(getKeyInput(Key.RETURN));
-keymap$1.START.KEYBOARD.push(getKeyInput(Key.SPACE));
-keymap$1.START.KEYBOARD.push(getKeyInput(Key.NUMPAD_3));
-keymap$1.START.GAMEPAD.push(getGamepadInput(9));
-
-// Select
-keymap$1.SELECT.KEYBOARD.push(getKeyInput(Key.SHIFT));
-keymap$1.SELECT.KEYBOARD.push(getKeyInput(Key.TAB));
-keymap$1.SELECT.KEYBOARD.push(getKeyInput(Key.BACK_SLASH));
-keymap$1.SELECT.KEYBOARD.push(getKeyInput(Key.NUMPAD_1));
-keymap$1.SELECT.GAMEPAD.push(getGamepadInput(8));
-
-var KEYMAP$1 = function KEYMAP() {
+var KEYMAP$1 = function KEYMAP$$1() {
   return JSON.parse(JSON.stringify(keymap$1));
 };
 
@@ -708,8 +689,6 @@ var ResponsiveGamepadService = function () {
       if (keyMap) {
         this.keyMap = keyMap;
       }
-
-      console.log(this.keyMap);
 
       // Add our key event listeners
       // Wrapping in this for preact prerender
@@ -854,6 +833,16 @@ var ResponsiveGamepadService = function () {
       controllerState.RIGHT = controllerState.DPAD_RIGHT || controllerState.LEFT_ANALOG_RIGHT || false;
       controllerState.DOWN = controllerState.DPAD_DOWN || controllerState.LEFT_ANALOG_DOWN || false;
       controllerState.LEFT = controllerState.DPAD_LEFT || controllerState.LEFT_ANALOG_LEFT || false;
+
+      if (controllerState.UP && controllerState.DOWN) {
+        controllerState.UP = false;
+        controllerState.DOWN = false;
+      }
+
+      if (controllerState.RIGHT && controllerState.LEFT) {
+        controllerState.RIGHT = false;
+        controllerState.LEFT = false;
+      }
 
       // Get our Analog Stick Axis
       var gamepad = getGamepads()[0];

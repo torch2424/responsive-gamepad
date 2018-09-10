@@ -1,6 +1,6 @@
 import './style';
 import { Component } from 'preact';
-import { ResponsiveGamepad, RESPONSIVE_GAMEPAD_KEYS, KEYMAP_DEFAULT } from './dist/responsive-gamepad.esm';
+import { ResponsiveGamepad, RESPONSIVE_GAMEPAD_KEYS, KEYMAP_DEFAULT, KEYMAP_GAMEBOY } from './dist/responsive-gamepad.esm';
 
 export default class App extends Component {
 
@@ -31,7 +31,7 @@ export default class App extends Component {
 
 	enableGamepad() {
 		// Initialize our gamepad
-		ResponsiveGamepad.enable(KEYMAP_DEFAULT());
+		ResponsiveGamepad.enable(KEYMAP_GAMEBOY());
 
 		// Add our touch inputs
 		const dpadElement = document.getElementById('gamepadDpad');
