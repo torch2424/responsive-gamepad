@@ -752,6 +752,11 @@ var ResponsiveGamepadService = function () {
         ...etc...
       }
       */
+      // Actually nevermind
+      // I am trying to solce too many use cases at once.
+      // Make 'DPAD' type only split the element to the DPAD_X
+      // They can use BUtton types to solve other problems
+      // Do the same for analogs in the future
 
       // Create our touch handler
       var touchHandler = function touchHandler(touchInput, event) {
