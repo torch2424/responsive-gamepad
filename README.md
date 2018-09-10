@@ -11,7 +11,7 @@ Handle Keyboard, Gamepad, and Touch Controls under a single API.
 
 [Demo](https://torch2424.github.io/responsive-gamepad/)
 
-![Responsive Gamepad Demo Screenshot](./assets/readmeDemo.png)
+<img src="./assets/readmeDemo.png" width="200px" />
 
 # Table Of Contents
 
@@ -51,4 +51,4 @@ LICENSE under [Apache 2.0](https://choosealicense.com/licenses/apache-2.0/)
 
 * Touch Input SVGS on the responsive gamepad demo, are [Google Material Icons](https://material.io/tools/icons/?style=baseline)
 
-* XInput vs. DirectInput - [Microsoft Article](https://docs.microsoft.com/en-us/windows/desktop/xinput/xinput-and-directinput), [Reddit thread](https://www.reddit.com/r/pcgaming/comments/4zlbrx/what_is_the_difference_between_directinput_and/)_
+* XInput vs. DirectInput - [Microsoft Article](https://docs.microsoft.com/en-us/windows/desktop/xinput/xinput-and-directinput), [Reddit thread](https://www.reddit.com/r/pcgaming/comments/4zlbrx/what_is_the_difference_between_directinput_and/)
