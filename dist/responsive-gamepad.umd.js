@@ -681,8 +681,8 @@ var ResponsiveGamepadService = function () {
 
     // Our settings
     this.gamepadAnalogStickDeadZone = 0.25;
-    this.keyMapKeys = Object.keys(KeyMapSchema());
-    this.keyMap = KEYMAP();
+    this.keyMap = undefined;
+    this.keyMapKeys = undefined;
     this.enabled = false;
     this.addedEventListeners = false;
   }
@@ -691,10 +691,14 @@ var ResponsiveGamepadService = function () {
     key: 'enable',
     value: function enable(keyMap) {
 
-      // TODO: Verify it is a valid keymap passed
-      if (keyMap) {
-        this.keyMap = keyMap;
+      if (this.enabled) {
+        console.error('Responsive Gamepad is already enabled');
+        return;
       }
+
+      // TODO: Verify it is a valid keymap passed
+      this.keyMap = keyMap || KEYMAP();
+      this.keyMapKeys = Object.keys(this.keyMap);
 
       // Add our key event listeners
       // Wrapping in this for preact prerender

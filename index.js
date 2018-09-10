@@ -29,9 +29,9 @@ export default class App extends Component {
     });
 	}
 
-	enableGamepad() {
+	enableGamepad(keymap) {
 		// Initialize our gamepad
-		ResponsiveGamepad.enable(KEYMAP_GAMEBOY());
+		ResponsiveGamepad.enable(keymap);
 
 		// Add our touch inputs
 		const dpadElement = document.getElementById('gamepadDpad');
@@ -52,7 +52,11 @@ export default class App extends Component {
 			touchSelectId: undefined
 		});
 		this.toggleTouchSelectInput();
-	}
+  }
+
+  enableGameboyKeymap() {
+    this.enableGamepad(KEYMAP_GAMEBOY())
+  }
 
 	disableGamepad() {
 		ResponsiveGamepad.disable();
@@ -117,16 +121,28 @@ export default class App extends Component {
 				</div>
 
 				<div class="addRemoveTouch">
-					<h3>Enabled/Disable</h3>
+          <h3>Enabled/Disable With Custom Keymaps</h3>
+
 					<p>Responsive Gamepad can be enabled and disabled (as a whole) as needed</p>
 					<div>
 						<button onClick={() => this.toggleResponsiveGamepad()} >
-							{ResponsiveGamepad.isEnabled() ? `Disable Responsive Gamepad` : 'Enable Responsive Gamepad'}
+							{ResponsiveGamepad.isEnabled() ? `Disable Responsive Gamepad` : 'Enable Default Responsive Gamepad'}
 						</button>
-					</div>
+          </div>
+
+          <p>
+            Custom Keymaps allow for altering which inputs represent which responsive-gamepad state key.
+            For instance, the "gameboy" keymap merges the X/Y buttons with the A/B buttons, and more!
+            You must disable the keymap to enable the gameboy keymap
+          </p>
+          <div>
+            <button onClick={() => this.enableGameboyKeymap()} disabled={ResponsiveGamepad.isEnabled()}>
+              Enable Gameboy Keymap
+            </button>
+          </div>
 				</div>
 
-				<div class="addRemoveTouch">
+				<div class="dynamicTouchInput">
 					<h3>Dynamic Touch Input</h3>
 					<p>Touch inputs can be added/removed on the fly!</p>
 					<div>

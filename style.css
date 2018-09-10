@@ -35,6 +35,14 @@ h1 {
 	background-color: aliceblue;
 }
 
+.dynamicTouchInput {
+  background-color: rgba(32, 89, 200, 0.55);
+
+  margin-top: 10px;
+  margin-bottom: 10px;
+  padding: 10px;
+}
+
 .preventDefault {
 	height: 500px;
 	background-color: rgba(199,116,232, 0.55);
