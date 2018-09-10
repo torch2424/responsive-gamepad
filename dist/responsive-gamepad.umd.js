@@ -151,7 +151,7 @@ function getGamepadInput(gamepadButtonId, axisId, axisIsPositive) {
   return input;
 }
 
-function getTouchInput(element, eventHandler, inputType) {
+function getTouchInput(element, inputType, eventHandler) {
   var touchInput = Object.assign({}, touchInputSchema);
 
   touchInput.ID = getInputId();
@@ -395,7 +395,7 @@ function updateTouchpadRect() {
 }
 
 // Function called on an event of a touchInput SVG Element
-function updateTouchpad(keyMapKey, touchInput, event) {
+function updateTouchpad(touchInput, event) {
 
   if (!this.enabled) {
     return;
@@ -737,56 +737,52 @@ var ResponsiveGamepadService = function () {
     }
   }, {
     key: 'addTouchInput',
-    value: function addTouchInput(keyMapKey, element, inputType) {
+    value: function addTouchInput(element, inputType, keyMapKeys) {
       var _this = this;
 
       // Create our touch handler
       var touchHandler = function touchHandler(touchInput, event) {
-        updateTouchpad.bind(_this)(keyMapKey, touchInput, event);
+        updateTouchpad.bind(_this)(touchInput, event);
       };
 
-      // Create the arguments that will be passed to getTouchInput,
-      // Last element is a spread of any additional passed arguments
-      var originalArguments = [].concat(Array.prototype.slice.call(arguments));
-      var touchInputArguments = [element, touchHandler, inputType].concat(toConsumableArray(originalArguments.slice(3)));
-
       // Declare our touch input
-      var touchInput = void 0;
-      touchInput = getTouchInput.apply(undefined, toConsumableArray(touchInputArguments));
+      var touchInput = getTouchInput(element, inputType, touchHandler);
 
       // Add the input to our keymap
-      this.keyMap[keyMapKey].TOUCHPAD.push(touchInput);
+      if (Array.isArray()) {
+        keyMapsKeys.forEach(function (keyMapKey) {
+          _this.keyMap[keyMapKey].TOUCHPAD.push(touchInput);
+        });
+      } else {
+        this.keyMap[keyMapKeys].TOUCHPAD.push(touchInput);
+      }
 
       // Return the touchInput ID so that is may be removed later
       return touchInput.ID;
     }
   }, {
     key: 'removeTouchInput',
-    value: function removeTouchInput(keyMapKey, touchInputId) {
+    value: function removeTouchInput(touchInputId) {
+      var _this2 = this;
+
       // Search for the input in our touch pad for every key
-      var touchInputIndex = undefined;
+      var foundId = false;
 
-      this.keyMap[keyMapKey].TOUCHPAD.some(function (input, index) {
-        if (input.ID === touchInputId) {
-          touchInputIndex = index;
-          return true;
-        }
-
-        return false;
+      this.keyMapKeys.forEach(function (keyMapKey) {
+        _this2.keyMap[keyMapKey].TOUCHPAD.forEach(function (input, index) {
+          if (input.ID === touchInputId) {
+            _this2.keyMap[keyMapKey].TOUCHPAD.splice(touchInputIndex, 1);
+            foundId = true;
+          }
+        });
       });
 
-      // If we found the key and index, remove the touch input
-      if (touchInputIndex !== undefined) {
-        this.keyMap[keyMapKey].TOUCHPAD.splice(touchInputIndex, 1);
-        return true;
-      }
-
-      return false;
+      return foundId;
     }
   }, {
     key: 'getState',
     value: function getState() {
-      var _this2 = this;
+      var _this3 = this;
 
       if (!this.enabled) {
         return {};
@@ -806,7 +802,7 @@ var ResponsiveGamepadService = function () {
       this.keyMapKeys.forEach(function (key) {
 
         // Find if any of the keyboard, gamepad or touchpad buttons are pressed
-        var keyboardState = _this2.keyMap[key].KEYBOARD.some(function (keyInput) {
+        var keyboardState = _this3.keyMap[key].KEYBOARD.some(function (keyInput) {
           return keyInput.ACTIVE;
         });
 
@@ -816,7 +812,7 @@ var ResponsiveGamepadService = function () {
         }
 
         // Find if any of the keyboard, gamepad or touchpad buttons are pressed
-        var gamepadState = _this2.keyMap[key].GAMEPAD.some(function (gamepadInput) {
+        var gamepadState = _this3.keyMap[key].GAMEPAD.some(function (gamepadInput) {
           return gamepadInput.ACTIVE;
         });
 
@@ -826,7 +822,7 @@ var ResponsiveGamepadService = function () {
         }
 
         // Find if any of the keyboard, gamepad or touchpad buttons are pressed
-        var touchState = _this2.keyMap[key].TOUCHPAD.some(function (touchInput) {
+        var touchState = _this3.keyMap[key].TOUCHPAD.some(function (touchInput) {
           return touchInput.ACTIVE;
         });
 

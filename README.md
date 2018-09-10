@@ -41,7 +41,64 @@ This is a quick **Tl;DR** on installing and using responsive-gamepad:
 
 # API Usage
 
-TODO:
+*Additional information/exports concerning Keymaps can be found in the [Keymaps](#keymaps) section.*
+
+First, import the `ResponsiveGamepad` singleton service with:
+
+`import {ResponsiveGamepad} from 'responsive-gamepad'`
+
+### enabled
+
+`ResponsiveGamepad.enable(optionalKeymap)`
+
+Function to enable the gamepad, and start listening for changes.
+
+**Params**
+
+* optionalKeymap: An option keymap that can be applied to the listener. See the [keymap](#keymap) section.
+
+### disable
+
+`ResponsiveGamepad.disable()`
+
+Function to disable the gamepad, and stop listening for changes.
+
+### isEnabled
+
+`ResponsiveGamepad.isEnabled()`
+
+Function to return if the `ResponsiveGamepad` service is currently enabled.
+
+**Returns**
+
+Boolean.
+
+### isIgnoringKeyEvents
+
+`ResponsiveGamepad.isIgnoringKeyEvents()`
+
+Function to return if the `ResponsiveGamepad` service is currently ignoring keyboard events, since we are focused on an input element.
+
+**Returns**
+
+Boolean.
+
+### addTouchInput
+
+
+### removeTouchInput
+
+`ResponsiveGamepad.removeTouchInput(touchInputId)`
+
+Function to remove listeners from a touch input element.
+
+**Params**
+
+* `touchInputId` - The returned string from `addTouchInput()`, identifying the touch element.
+
+**Returns**
+
+Boolean. True if removed, false if not.
 
 # Keymaps
 
