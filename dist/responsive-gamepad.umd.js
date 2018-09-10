@@ -882,6 +882,11 @@ var ResponsiveGamepadService = function () {
 var ResponsiveGamepad = new ResponsiveGamepadService();
 
 exports.ResponsiveGamepad = ResponsiveGamepad;
+exports.KeyMapSchema = KeyMapSchema;
+exports.getKeyInput = getKeyInput;
+exports.getGamepadInput = getGamepadInput;
+exports.getTouchInput = getTouchInput;
+exports.mergeInputs = mergeInputs;
 exports.RESPONSIVE_GAMEPAD_KEYS = RESPONSIVE_GAMEPAD_KEYS;
 exports.KEYMAP = KEYMAP;
 exports.KEYMAP_DEFAULT = KEYMAP;

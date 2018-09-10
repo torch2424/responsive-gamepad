@@ -17,8 +17,7 @@
     "lib:watch": "npx rollup -c -w",
     "lib:build": "npx rollup -c",
     "lib:deploy": "npm run lib:build && npx np",
-    "test": "echo \"No tests specified\"",
-    "lint": "eslint src"
+    "test": "echo \"No tests specified\""
   },
   "files": [
     "dist",

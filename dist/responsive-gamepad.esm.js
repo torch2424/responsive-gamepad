@@ -875,4 +875,4 @@ var ResponsiveGamepadService = function () {
 
 var ResponsiveGamepad = new ResponsiveGamepadService();
 
-export { ResponsiveGamepad, RESPONSIVE_GAMEPAD_KEYS, KEYMAP, KEYMAP as KEYMAP_DEFAULT, KEYMAP$1 as KEYMAP_GAMEBOY };
+export { ResponsiveGamepad, KeyMapSchema, getKeyInput, getGamepadInput, getTouchInput, mergeInputs, RESPONSIVE_GAMEPAD_KEYS, KEYMAP, KEYMAP as KEYMAP_DEFAULT, KEYMAP$1 as KEYMAP_GAMEBOY };
