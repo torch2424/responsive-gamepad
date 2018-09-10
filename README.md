@@ -11,7 +11,7 @@ Handle Keyboard, Gamepad, and Touch Controls under a single API.
 
 [Demo](https://torch2424.github.io/responsive-gamepad/)
 
-<img src="./assets/readmeDemo.png" width="200px" />
+<img src="./assets/readmeDemo.png" width="500px" />
 
 # Table Of Contents
 
