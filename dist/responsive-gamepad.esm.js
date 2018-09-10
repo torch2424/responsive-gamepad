@@ -734,6 +734,19 @@ var ResponsiveGamepadService = function () {
     value: function addTouchInput(element, inputType, keyMapKeys) {
       var _this = this;
 
+      // TODO:
+      // Finish cleaning up touch input
+      // Allow passing in multuple keymap keys
+      // Rename keyMapKeys -> keyMapKeyConfig
+      // keyMapKeyConfig = Object
+      /* 
+      KeyMapKeyConfig = {
+        UP: 'DPAD_UP',
+        LEFT: 'DPAD_LEFT',
+        ...etc...
+      }
+      */
+
       // Create our touch handler
       var touchHandler = function touchHandler(touchInput, event) {
         updateTouchpad.bind(_this)(touchInput, event);
