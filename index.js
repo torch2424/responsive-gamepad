@@ -39,13 +39,10 @@ export default class App extends Component {
 		const aElement = document.getElementById('gamepadA');
 		const bElement = document.getElementById('gamepadB');
 
-    ResponsiveGamepad.addTouchInput(RESPONSIVE_GAMEPAD_KEYS.DPAD_UP, dpadElement, 'DPAD', 'UP');
-    ResponsiveGamepad.addTouchInput(RESPONSIVE_GAMEPAD_KEYS.DPAD_RIGHT, dpadElement, 'DPAD', 'RIGHT');
-    ResponsiveGamepad.addTouchInput(RESPONSIVE_GAMEPAD_KEYS.DPAD_DOWN, dpadElement, 'DPAD', 'DOWN');
-    ResponsiveGamepad.addTouchInput(RESPONSIVE_GAMEPAD_KEYS.DPAD_LEFT, dpadElement, 'DPAD', 'LEFT');
-    ResponsiveGamepad.addTouchInput(RESPONSIVE_GAMEPAD_KEYS.A, aElement, 'BUTTON');
-    ResponsiveGamepad.addTouchInput(RESPONSIVE_GAMEPAD_KEYS.B, bElement, 'BUTTON');
-    ResponsiveGamepad.addTouchInput(RESPONSIVE_GAMEPAD_KEYS.START, startElement, 'BUTTON');
+    ResponsiveGamepad.addTouchInput(dpadElement, 'DPAD');
+    ResponsiveGamepad.addTouchInput(aElement, 'BUTTON', RESPONSIVE_GAMEPAD_KEYS.A);
+    ResponsiveGamepad.addTouchInput(bElement, 'BUTTON', RESPONSIVE_GAMEPAD_KEYS.B);
+    ResponsiveGamepad.addTouchInput(startElement, 'BUTTON', RESPONSIVE_GAMEPAD_KEYS.START);
 
 		this.setState({
 			...this.state,
@@ -77,7 +74,7 @@ export default class App extends Component {
 
 	toggleTouchSelectInput() {
 		if (this.state.touchSelectId) {
-      ResponsiveGamepad.removeTouchInput(RESPONSIVE_GAMEPAD_KEYS.SELECT, this.state.touchSelectId);
+      ResponsiveGamepad.removeTouchInput(this.state.touchSelectId);
 			this.setState({
 				...this.state,
 				touchSelectId: undefined
@@ -85,7 +82,7 @@ export default class App extends Component {
 		} else {
 
 			const selectElement = document.getElementById('gamepadSelect');
-      const touchSelectId = ResponsiveGamepad.addTouchInput(RESPONSIVE_GAMEPAD_KEYS.SELECT, selectElement, 'BUTTON');
+      const touchSelectId = ResponsiveGamepad.addTouchInput(selectElement, 'BUTTON', RESPONSIVE_GAMEPAD_KEYS.SELECT,);
 
 			this.setState({
 				touchSelectId: touchSelectId

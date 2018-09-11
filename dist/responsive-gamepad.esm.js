@@ -73,9 +73,15 @@ var touchInputSchema = {
   DIRECTION: undefined,
   EVENT_HANDLER: undefined,
   BOUNDING_RECT: undefined
+};
 
-  // Define our keymap keys
-};var responsiveGamepadKeys = {
+var touchInputTypes = {
+  BUTTON: "BUTTON",
+  DPAD: "DPAD"
+};
+
+// Define our keymap keys
+var responsiveGamepadKeys = {
   DPAD_UP: 'DPAD_UP',
   DPAD_RIGHT: 'DPAD_RIGHT',
   DPAD_DOWN: 'DPAD_DOWN',
@@ -121,7 +127,7 @@ function getInputId() {
     return Math.random().toString(36).replace(/[^a-z]+/g, '').substr(2, 10);
   };
 
-  var stringId = '' + idGenerator() + idGenerator();
+  var stringId = "" + idGenerator() + idGenerator();
   return stringId.slice();
 }
 
@@ -145,27 +151,8 @@ function getGamepadInput(gamepadButtonId, axisId, axisIsPositive) {
   return input;
 }
 
-function getTouchInput(element, inputType, eventHandler) {
-  var touchInput = Object.assign({}, touchInputSchema);
-
-  touchInput.ID = getInputId();
-
-  // TODO: Check the type for a valid type
-
-  // Add our passed parameters
-  touchInput.ELEMENT = element;
-  touchInput.EVENT_HANDLER = eventHandler;
-  touchInput.TYPE = inputType;
-
-  // If DPAD type, get the direction
-  if (touchInput.TYPE === 'DPAD') {
-    touchInput.DIRECTION = arguments[3];
-  }
-
-  // Add our bounding rect
-  var boundingRect = touchInput.ELEMENT.getBoundingClientRect();
-  touchInput.BOUNDING_RECT = boundingRect;
-
+// Function to add event listeners for touch input
+function createEventListenersForTouchInput(touchInput) {
   // Define our eventListener functions
   var eventListenerCallback = function eventListenerCallback(event) {
     if (touchInput.EVENT_HANDLER) {
@@ -179,8 +166,42 @@ function getTouchInput(element, inputType, eventHandler) {
   touchInput.ELEMENT.addEventListener("touchend", eventListenerCallback);
   touchInput.ELEMENT.addEventListener("mousedown", eventListenerCallback);
   touchInput.ELEMENT.addEventListener("mouseup", eventListenerCallback);
+}
 
-  return touchInput;
+function createTouchInput(element, inputType, eventHandler, keyMap, additionalArguments) {
+
+  if (!Object.keys(touchInputTypes).includes(inputType)) {
+    return false;
+  }
+
+  // Create our basic touch input attributes
+  var touchInput = Object.assign({}, touchInputSchema);
+  touchInput.ID = getInputId();
+  touchInput.ELEMENT = element;
+  touchInput.EVENT_HANDLER = eventHandler;
+  touchInput.TYPE = inputType;
+
+  // Add our bounding rect
+  var boundingRect = touchInput.ELEMENT.getBoundingClientRect();
+  touchInput.BOUNDING_RECT = boundingRect;
+
+  // Finally, add the touch input to the appropriate keymap
+  if (inputType === touchInputTypes.BUTTON) {
+    // Create our event listeners
+    createEventListenersForTouchInput(touchInput);
+    // Add the button to the additional keyMapKey argument
+    keyMap[additionalArguments[0]].TOUCHPAD.push(touchInput);
+  } else if (inputType === touchInputTypes.DPAD) {
+    // Spread the touch input over the DPAD_X inputs
+    ['UP', 'RIGHT', 'DOWN', 'LEFT'].forEach(function (direction) {
+      var directionalTouchInput = Object.assign({}, touchInput);
+      createEventListenersForTouchInput(directionalTouchInput);
+      directionalTouchInput.DIRECTION = direction;
+      keyMap["DPAD_" + direction].TOUCHPAD.push(directionalTouchInput);
+    });
+  }
+
+  return touchInput.ID;
 }
 
 // Helper function for creating new gamepads
@@ -209,6 +230,7 @@ function mergeInputs(baseKey) {
 }
 
 var RESPONSIVE_GAMEPAD_KEYS = responsiveGamepadKeys;
+var TOUCH_INPUT_TYPES = touchInputTypes;
 
 // Functions to update keymap state
 // 'this' should be bound by the respective service
@@ -731,26 +753,12 @@ var ResponsiveGamepadService = function () {
     }
   }, {
     key: 'addTouchInput',
-    value: function addTouchInput(element, inputType, keyMapKeys) {
+    value: function addTouchInput(element, inputType) {
       var _this = this;
 
-      // TODO:
-      // Finish cleaning up touch input
-      // Allow passing in multuple keymap keys
-      // Rename keyMapKeys -> keyMapKeyConfig
-      // keyMapKeyConfig = Object
-      /* 
-      KeyMapKeyConfig = {
-        UP: 'DPAD_UP',
-        LEFT: 'DPAD_LEFT',
-        ...etc...
-      }
-      */
-      // Actually nevermind
-      // I am trying to solce too many use cases at once.
-      // Make 'DPAD' type only split the element to the DPAD_X
-      // They can use BUtton types to solve other problems
-      // Do the same for analogs in the future
+      // Get any additional arguments
+      var originalArguments = [].concat(Array.prototype.slice.call(arguments));
+      var additionalArguments = [].concat(toConsumableArray(originalArguments.slice(2)));
 
       // Create our touch handler
       var touchHandler = function touchHandler(touchInput, event) {
@@ -758,19 +766,10 @@ var ResponsiveGamepadService = function () {
       };
 
       // Declare our touch input
-      var touchInput = getTouchInput(element, inputType, touchHandler);
-
-      // Add the input to our keymap
-      if (Array.isArray()) {
-        keyMapsKeys.forEach(function (keyMapKey) {
-          _this.keyMap[keyMapKey].TOUCHPAD.push(touchInput);
-        });
-      } else {
-        this.keyMap[keyMapKeys].TOUCHPAD.push(touchInput);
-      }
+      var touchInputId = createTouchInput(element, inputType, touchHandler, this.keyMap, additionalArguments);
 
       // Return the touchInput ID so that is may be removed later
-      return touchInput.ID;
+      return touchInputId;
     }
   }, {
     key: 'removeTouchInput',
@@ -889,4 +888,4 @@ var ResponsiveGamepadService = function () {
 
 var ResponsiveGamepad = new ResponsiveGamepadService();
 
-export { ResponsiveGamepad, KeyMapSchema, getKeyInput, getGamepadInput, getTouchInput, mergeInputs, RESPONSIVE_GAMEPAD_KEYS, KEYMAP, KEYMAP as KEYMAP_DEFAULT, KEYMAP$1 as KEYMAP_GAMEBOY };
+export { ResponsiveGamepad, KeyMapSchema, getKeyInput, getGamepadInput, createTouchInput, mergeInputs, RESPONSIVE_GAMEPAD_KEYS, TOUCH_INPUT_TYPES, KEYMAP, KEYMAP as KEYMAP_DEFAULT, KEYMAP$1 as KEYMAP_GAMEBOY };

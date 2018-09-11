@@ -85,6 +85,9 @@ Boolean.
 
 ### addTouchInput
 
+`ResponsiveGamepad.addTouchInputs(element, inputType, ...additionArgumentsDependingOnInputType)`
+
+TODO:
 
 ### removeTouchInput
 
