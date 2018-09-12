@@ -152,7 +152,7 @@ function getGamepadInput(gamepadButtonId, axisId, axisIsPositive) {
   return input;
 }
 
-function createTouchInput(element, inputType, updateTouchpad, keyMap, touchMap, additionalArguments) {
+function createTouchInput(element, inputType, updateTouchpad, keyMap, analogMaps, additionalArguments) {
 
   if (!Object.keys(touchInputTypes).includes(inputType)) {
     return false;
@@ -168,21 +168,7 @@ function createTouchInput(element, inputType, updateTouchpad, keyMap, touchMap, 
   var boundingRect = touchInput.ELEMENT.getBoundingClientRect();
   touchInput.BOUNDING_RECT = boundingRect;
 
-  // Define our eventListener functions
-  var eventListenerCallback = function eventListenerCallback(event) {
-    updateTouchpad(touchInput, keyMap, touchMap, additionalArguments, event);
-  };
-
-  // Add event listeners to the element
-  touchInput.ELEMENT.addEventListener("touchstart", eventListenerCallback);
-  touchInput.ELEMENT.addEventListener("touchmove", eventListenerCallback);
-  touchInput.ELEMENT.addEventListener("touchend", eventListenerCallback);
-  touchInput.ELEMENT.addEventListener("mousedown", eventListenerCallback);
-  touchInput.ELEMENT.addEventListener("mousemove", eventListenerCallback);
-  touchInput.ELEMENT.addEventListener("mouseup", eventListenerCallback);
-  touchInput.ELEMENT.addEventListener("mouseleave", eventListenerCallback);
-
-  // Finally, add the touch input to the appropriate keymap
+  // Add the touch input to the appropriate keymap
   if (inputType === touchInputTypes.BUTTON) {
     // Add the button to the additional keyMapKey argument
     keyMap[additionalArguments[0]].TOUCHPAD.push(touchInput);
@@ -193,7 +179,24 @@ function createTouchInput(element, inputType, updateTouchpad, keyMap, touchMap, 
       directionalTouchInput.DIRECTION = direction;
       keyMap["DPAD_" + direction].TOUCHPAD.push(directionalTouchInput);
     });
+  } else if (inputType === touchInputTypes.ANALOG) {
+    // Since we are axes, and not on/off handled in updateTouchpad
+    analogMaps[touchInput.ID] = {};
   }
+
+  // Define our eventListener functions
+  var eventListenerCallback = function eventListenerCallback(event) {
+    updateTouchpad(touchInput, keyMap, analogMaps[touchInput.ID], additionalArguments, event);
+  };
+
+  // Add event listeners to the element
+  touchInput.ELEMENT.addEventListener("touchstart", eventListenerCallback);
+  touchInput.ELEMENT.addEventListener("touchmove", eventListenerCallback);
+  touchInput.ELEMENT.addEventListener("touchend", eventListenerCallback);
+  touchInput.ELEMENT.addEventListener("mousedown", eventListenerCallback);
+  touchInput.ELEMENT.addEventListener("mousemove", eventListenerCallback);
+  touchInput.ELEMENT.addEventListener("mouseup", eventListenerCallback);
+  touchInput.ELEMENT.addEventListener("mouseleave", eventListenerCallback);
 
   return touchInput.ID;
 }
@@ -404,13 +407,13 @@ function findDpadTouchInput(keyMap, id, direction) {
 }
 
 // Function to set the axes of an analog to zero
-function resetTouchAnalog(touchInput, touchMap, additionalArguments) {
-  touchMap[additionalArguments[0] + '_ANALOG_HORIZONTAL_AXIS'] = 0.0;
-  touchMap[additionalArguments[0] + '_ANALOG_VERTICAL_AXIS'] = 0.0;
-  touchMap[additionalArguments[0] + '_ANALOG_UP'] = false;
-  touchMap[additionalArguments[0] + '_ANALOG_RIGHT'] = false;
-  touchMap[additionalArguments[0] + '_ANALOG_DOWN'] = false;
-  touchMap[additionalArguments[0] + '_ANALOG_LEFT'] = false;
+function resetTouchAnalog(touchInput, analogMap, additionalArguments) {
+  analogMap[additionalArguments[0] + '_ANALOG_HORIZONTAL_AXIS'] = 0.0;
+  analogMap[additionalArguments[0] + '_ANALOG_VERTICAL_AXIS'] = 0.0;
+  analogMap[additionalArguments[0] + '_ANALOG_UP'] = false;
+  analogMap[additionalArguments[0] + '_ANALOG_RIGHT'] = false;
+  analogMap[additionalArguments[0] + '_ANALOG_DOWN'] = false;
+  analogMap[additionalArguments[0] + '_ANALOG_LEFT'] = false;
 
   touchInput.ELEMENT.style.transform = 'translate(0px, 0px)';
 }
@@ -432,7 +435,7 @@ function updateTouchpadRect() {
 }
 
 // Function called on an event of a touchInput SVG Element
-function updateTouchpad(touchInput, keyMap, touchMap, additionalArguments, event) {
+function updateTouchpad(touchInput, keyMap, analogMap, additionalArguments, event) {
 
   if (!this.enabled) {
     return;
@@ -553,14 +556,14 @@ function updateTouchpad(touchInput, keyMap, touchMap, additionalArguments, event
       touchInput.ELEMENT.style.transform = 'translate(' + translateX + 'px, ' + translateY + 'px)';
 
       // Set Axis on keyMap
-      touchMap[additionalArguments[0] + '_ANALOG_HORIZONTAL_AXIS'] = horizontalAxis;
-      touchMap[additionalArguments[0] + '_ANALOG_VERTICAL_AXIS'] = verticalAxis;
+      analogMap[additionalArguments[0] + '_ANALOG_HORIZONTAL_AXIS'] = horizontalAxis;
+      analogMap[additionalArguments[0] + '_ANALOG_VERTICAL_AXIS'] = verticalAxis;
 
       // Set Analog Direction State
-      touchMap[additionalArguments[0] + '_ANALOG_UP'] = verticalAxis < 0;
-      touchMap[additionalArguments[0] + '_ANALOG_RIGHT'] = horizontalAxis > 0;
-      touchMap[additionalArguments[0] + '_ANALOG_DOWN'] = verticalAxis > 0;
-      touchMap[additionalArguments[0] + '_ANALOG_LEFT'] = horizontalAxis < 0;
+      analogMap[additionalArguments[0] + '_ANALOG_UP'] = verticalAxis < 0;
+      analogMap[additionalArguments[0] + '_ANALOG_RIGHT'] = horizontalAxis > 0;
+      analogMap[additionalArguments[0] + '_ANALOG_DOWN'] = verticalAxis > 0;
+      analogMap[additionalArguments[0] + '_ANALOG_LEFT'] = horizontalAxis < 0;
     }
   } else {
     // Not active
@@ -580,7 +583,7 @@ function updateTouchpad(touchInput, keyMap, touchMap, additionalArguments, event
     }
 
     if (touchInput.TYPE === 'ANALOG') {
-      resetTouchAnalog(touchInput, touchMap, additionalArguments);
+      resetTouchAnalog(touchInput, analogMap, additionalArguments);
       return;
     }
   }
@@ -780,7 +783,7 @@ var ResponsiveGamepadService = function () {
     this.gamepadAnalogStickDeadZone = 0.25;
     this.keyMap = undefined;
     this.keyMapKeys = undefined;
-    this.touchMap = undefined;
+    this.analogMaps = undefined;
     this.enabled = false;
     this.addedEventListeners = false;
   }
@@ -797,7 +800,7 @@ var ResponsiveGamepadService = function () {
       // TODO: Verify it is a valid keymap passed
       this.keyMap = keyMap || KEYMAP();
       this.keyMapKeys = Object.keys(this.keyMap);
-      this.touchMap = {};
+      this.analogMaps = {};
 
       // Add our key event listeners
       // Wrapping in this for preact prerender
@@ -843,7 +846,7 @@ var ResponsiveGamepadService = function () {
       var additionalArguments = [].concat(toConsumableArray(originalArguments.slice(2)));
 
       // Declare our touch input
-      var touchInputId = createTouchInput(element, inputType, updateTouchpad.bind(this), this.keyMap, this.touchMap, additionalArguments);
+      var touchInputId = createTouchInput(element, inputType, updateTouchpad.bind(this), this.keyMap, this.analogMaps, additionalArguments);
 
       // Return the touchInput ID so that is may be removed later
       return touchInputId;
@@ -859,10 +862,22 @@ var ResponsiveGamepadService = function () {
       this.keyMapKeys.forEach(function (keyMapKey) {
         _this.keyMap[keyMapKey].TOUCHPAD.forEach(function (input, index) {
           if (input.ID === touchInputId) {
-            _this.keyMap[keyMapKey].TOUCHPAD.splice(touchInputIndex, 1);
+            _this.keyMap[keyMapKey].TOUCHPAD.splice(index, 1);
             foundId = true;
           }
         });
+      });
+
+      if (foundId) {
+        return foundId;
+      }
+
+      // Next, check the analog maps
+      this.analogMaps.forEach(function (analogMapsKey) {
+        if (analogMapsKey === touchInputId) {
+          delete _this.analogMaps.analogMapsKey;
+          foundId = true;
+        }
       });
 
       return foundId;
@@ -922,11 +937,14 @@ var ResponsiveGamepadService = function () {
         controllerState[key] = false;
       });
 
-      // Assign Truthy values from the touchMap
-      Object.keys(this.touchMap).forEach(function (touchMapKey) {
-        if (_this2.touchMap[touchMapKey]) {
-          controllerState[touchMapKey] = _this2.touchMap[touchMapKey];
-        }
+      // Assign Truthy values from the analogMaps
+      Object.keys(this.analogMaps).forEach(function (analogMapsKey) {
+        Object.keys(_this2.analogMaps[analogMapsKey]).forEach(function (analogMapKey) {
+          var stateValue = _this2.analogMaps[analogMapsKey][analogMapKey];
+          if (stateValue) {
+            controllerState[analogMapKey] = stateValue;
+          }
+        });
       });
 
       // Get our Analog Stick Axis
