@@ -452,6 +452,11 @@
     //event.stopPropagation();
     event.preventDefault();
 
+    // Check if we still have our requirements
+    if (touchInput.TYPE === 'DPAD' && !keyMap || touchInput.TYPE === 'ANALOG' && !analogMap) {
+      return;
+    }
+
     // Check for active event types
     if (event.type === "touchstart" || event.type === "touchmove" || event.type === "mousedown" || event.type === "mousemove") {
       // Active
@@ -879,9 +884,9 @@
         }
 
         // Next, check the analog maps
-        this.analogMaps.forEach(function (analogMapsKey) {
+        Object.keys(this.analogMaps).forEach(function (analogMapsKey) {
           if (analogMapsKey === touchInputId) {
-            delete _this.analogMaps.analogMapsKey;
+            delete _this.analogMaps[analogMapsKey];
             foundId = true;
           }
         });
