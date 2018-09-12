@@ -34,12 +34,14 @@ export default class App extends Component {
 		ResponsiveGamepad.enable(keymap);
 
 		// Add our touch inputs
-		const dpadElement = document.getElementById('gamepadDpad');
+    const dpadElement = document.getElementById('gamepadDpad');
+    const analogStickElement = document.getElementById('gamepadLeftAnalog')
 		const startElement = document.getElementById('gamepadStart');
 		const aElement = document.getElementById('gamepadA');
 		const bElement = document.getElementById('gamepadB');
 
     ResponsiveGamepad.addTouchInput(dpadElement, 'DPAD');
+    ResponsiveGamepad.addTouchInput(analogStickElement, 'ANALOG', 'LEFT');
     ResponsiveGamepad.addTouchInput(aElement, 'BUTTON', RESPONSIVE_GAMEPAD_KEYS.A);
     ResponsiveGamepad.addTouchInput(bElement, 'BUTTON', RESPONSIVE_GAMEPAD_KEYS.B);
     ResponsiveGamepad.addTouchInput(startElement, 'BUTTON', RESPONSIVE_GAMEPAD_KEYS.START);
@@ -165,13 +167,25 @@ export default class App extends Component {
 					</select>
 				</div>
 
-				<div class="gamepad">
+        <div class="gamepad">
+
+          {/* Left Analog */}
+          <div class="analog-container">
+
+            <svg id="gamepadLeftAnalog" class="analog-stick" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="12" cy="12" r="6"/>
+            </svg>
+            <svg id="gamepadLeftAnalogBg" class="analog-background" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="12" cy="12" r="12"/>
+            </svg>
+          </div>
+
 
 					{/* DPAD */}
 					<svg id="gamepadDpad" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
 					    <path d="M0 0h24v24H0z" fill="none"/>
 					    <path d="M15 7.5V2H9v5.5l3 3 3-3zM7.5 9H2v6h5.5l3-3-3-3zM9 16.5V22h6v-5.5l-3-3-3 3zM16.5 9l-3 3 3 3H22V9h-5.5z"/>
-					</svg>
+            </svg>
 
 					{/* Start */}
 					<svg id="gamepadStart" fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">

@@ -77,7 +77,8 @@ var touchInputSchema = {
 
 var touchInputTypes = {
   BUTTON: "BUTTON",
-  DPAD: "DPAD"
+  DPAD: "DPAD",
+  ANALOG: "ANALOG"
 };
 
 // Define our keymap keys
@@ -151,24 +152,7 @@ function getGamepadInput(gamepadButtonId, axisId, axisIsPositive) {
   return input;
 }
 
-// Function to add event listeners for touch input
-function createEventListenersForTouchInput(touchInput) {
-  // Define our eventListener functions
-  var eventListenerCallback = function eventListenerCallback(event) {
-    if (touchInput.EVENT_HANDLER) {
-      touchInput.EVENT_HANDLER(touchInput, event);
-    }
-  };
-
-  // Add event listeners to the element
-  touchInput.ELEMENT.addEventListener("touchstart", eventListenerCallback);
-  touchInput.ELEMENT.addEventListener("touchmove", eventListenerCallback);
-  touchInput.ELEMENT.addEventListener("touchend", eventListenerCallback);
-  touchInput.ELEMENT.addEventListener("mousedown", eventListenerCallback);
-  touchInput.ELEMENT.addEventListener("mouseup", eventListenerCallback);
-}
-
-function createTouchInput(element, inputType, eventHandler, keyMap, additionalArguments) {
+function createTouchInput(element, inputType, updateTouchpad, keyMap, touchMap, additionalArguments) {
 
   if (!Object.keys(touchInputTypes).includes(inputType)) {
     return false;
@@ -178,24 +162,34 @@ function createTouchInput(element, inputType, eventHandler, keyMap, additionalAr
   var touchInput = Object.assign({}, touchInputSchema);
   touchInput.ID = getInputId();
   touchInput.ELEMENT = element;
-  touchInput.EVENT_HANDLER = eventHandler;
   touchInput.TYPE = inputType;
 
   // Add our bounding rect
   var boundingRect = touchInput.ELEMENT.getBoundingClientRect();
   touchInput.BOUNDING_RECT = boundingRect;
 
+  // Define our eventListener functions
+  var eventListenerCallback = function eventListenerCallback(event) {
+    updateTouchpad(touchInput, keyMap, touchMap, additionalArguments, event);
+  };
+
+  // Add event listeners to the element
+  touchInput.ELEMENT.addEventListener("touchstart", eventListenerCallback);
+  touchInput.ELEMENT.addEventListener("touchmove", eventListenerCallback);
+  touchInput.ELEMENT.addEventListener("touchend", eventListenerCallback);
+  touchInput.ELEMENT.addEventListener("mousedown", eventListenerCallback);
+  touchInput.ELEMENT.addEventListener("mousemove", eventListenerCallback);
+  touchInput.ELEMENT.addEventListener("mouseup", eventListenerCallback);
+  touchInput.ELEMENT.addEventListener("mouseleave", eventListenerCallback);
+
   // Finally, add the touch input to the appropriate keymap
   if (inputType === touchInputTypes.BUTTON) {
-    // Create our event listeners
-    createEventListenersForTouchInput(touchInput);
     // Add the button to the additional keyMapKey argument
     keyMap[additionalArguments[0]].TOUCHPAD.push(touchInput);
   } else if (inputType === touchInputTypes.DPAD) {
     // Spread the touch input over the DPAD_X inputs
     ['UP', 'RIGHT', 'DOWN', 'LEFT'].forEach(function (direction) {
       var directionalTouchInput = Object.assign({}, touchInput);
-      createEventListenersForTouchInput(directionalTouchInput);
       directionalTouchInput.DIRECTION = direction;
       keyMap["DPAD_" + direction].TOUCHPAD.push(directionalTouchInput);
     });
@@ -381,17 +375,44 @@ function updateGamepad() {
 // Functions to update keymap state
 // 'this' should be bound by the respective service
 
+var dpadKeys = [RESPONSIVE_GAMEPAD_KEYS.DPAD_UP, RESPONSIVE_GAMEPAD_KEYS.DPAD_RIGHT, RESPONSIVE_GAMEPAD_KEYS.DPAD_DOWN, RESPONSIVE_GAMEPAD_KEYS.DPAD_LEFT];
+
 // Reset all Direction keys for a DPAD for touch Inputs
 function resetTouchDpad() {
   var _this = this;
-
-  var dpadKeys = [RESPONSIVE_GAMEPAD_KEYS.DPAD_UP, RESPONSIVE_GAMEPAD_KEYS.DPAD_RIGHT, RESPONSIVE_GAMEPAD_KEYS.DPAD_DOWN, RESPONSIVE_GAMEPAD_KEYS.DPAD_LEFT];
 
   dpadKeys.forEach(function (dpadKey) {
     _this.keyMap[dpadKey].TOUCHPAD.forEach(function (touchInput) {
       touchInput.ACTIVE = false;
     });
   });
+}
+
+// Find a Dpad Touch element with Direction and ID
+function findDpadTouchInput(keyMap, id, direction) {
+  var foundTouchInput = void 0;
+
+  keyMap['DPAD_' + direction].TOUCHPAD.some(function (touchInput) {
+    if (touchInput.ID === id) {
+      foundTouchInput = touchInput;
+      return true;
+    }
+    return false;
+  });
+
+  return foundTouchInput;
+}
+
+// Function to set the axes of an analog to zero
+function resetTouchAnalog(touchInput, touchMap, additionalArguments) {
+  touchMap[additionalArguments[0] + '_ANALOG_HORIZONTAL_AXIS'] = 0.0;
+  touchMap[additionalArguments[0] + '_ANALOG_VERTICAL_AXIS'] = 0.0;
+  touchMap[additionalArguments[0] + '_ANALOG_UP'] = false;
+  touchMap[additionalArguments[0] + '_ANALOG_RIGHT'] = false;
+  touchMap[additionalArguments[0] + '_ANALOG_DOWN'] = false;
+  touchMap[additionalArguments[0] + '_ANALOG_LEFT'] = false;
+
+  touchInput.ELEMENT.style.transform = 'translate(0px, 0px)';
 }
 
 // Function to update touch button position and size
@@ -411,7 +432,7 @@ function updateTouchpadRect() {
 }
 
 // Function called on an event of a touchInput SVG Element
-function updateTouchpad(touchInput, event) {
+function updateTouchpad(touchInput, keyMap, touchMap, additionalArguments, event) {
 
   if (!this.enabled) {
     return;
@@ -423,27 +444,46 @@ function updateTouchpad(touchInput, event) {
   event.preventDefault();
 
   // Check for active event types
-  if (event.type === "touchstart" || event.type === "touchmove" || event.type === "mousedown") {
+  if (event.type === "touchstart" || event.type === "touchmove" || event.type === "mousedown" || event.type === "mousemove") {
     // Active
+
+    if (event.type === "mousemove" && !touchInput.MOUSEDOWN) {
+      return;
+    }
+
+    if (event.type === "mousedown") {
+
+      touchInput.MOUSEDOWN = true;
+    }
+
+    // Button Type
+    if (touchInput.TYPE === 'BUTTON' && event.type !== "mousemove") {
+      touchInput.ACTIVE = true;
+      return;
+    }
+
+    // DIRECTIONAL
+    // We will need these  calculations for when if we are dpad or analog
+
+    // Calculate for the correct key
+    // Only using the first touch, since we shouldn't be having two fingers on the dpad
+    var touch = void 0;
+    if (event.type.includes('touch')) {
+      touch = event.touches[0];
+    } else if (event.type.includes('mouse')) {
+      touch = event;
+    }
+
+    // We will need these  calculations for when if we are dpad or analog
+    // Find our centers of our rectangles, and our unbiased X Y values on the rect
+    var rectCenterX = (touchInput.BOUNDING_RECT.right - touchInput.BOUNDING_RECT.left) / 2;
+    var rectCenterY = (touchInput.BOUNDING_RECT.bottom - touchInput.BOUNDING_RECT.top) / 2;
+    var touchX = touch.clientX - touchInput.BOUNDING_RECT.left;
+    var touchY = touch.clientY - touchInput.BOUNDING_RECT.top;
 
     if (touchInput.TYPE === 'DPAD') {
 
-      // Calculate for the correct key
-      // Only using the first touch, since we shouldn't be having two fingers on the dpad
-      var touch = void 0;
-      if (event.type.includes('touch')) {
-        touch = event.touches[0];
-      } else if (event.type.includes('mouse')) {
-        touch = event;
-      }
-
       // Find if the horizontal or vertical influence is greater
-      // Find our centers of our rectangles, and our unbiased X Y values on the rect
-      var rectCenterX = (touchInput.BOUNDING_RECT.right - touchInput.BOUNDING_RECT.left) / 2;
-      var rectCenterY = (touchInput.BOUNDING_RECT.bottom - touchInput.BOUNDING_RECT.top) / 2;
-      var touchX = touch.clientX - touchInput.BOUNDING_RECT.left;
-      var touchY = touch.clientY - touchInput.BOUNDING_RECT.top;
-
       // Lesson From: picoDeploy
       // Fix for shoot button causing the character to move right on multi touch error
       // + 50 for some buffer
@@ -451,6 +491,10 @@ function updateTouchpad(touchInput, event) {
         // Ignore the event
         return;
       }
+
+      // We forsure know we have input
+      // Reset previous DPAD State
+      resetTouchDpad.bind(this)();
 
       // Create an additonal influece for horizontal, to make it feel better
       var horizontalInfluence = touchInput.BOUNDING_RECT.width / 8;
@@ -466,41 +510,78 @@ function updateTouchpad(touchInput, event) {
 
           var isLeft = touchX < touchInput.BOUNDING_RECT.width / 2;
 
-          if (isLeft && touchInput.DIRECTION === 'LEFT') {
-            touchInput.ACTIVE = true;
-          } else if (!isLeft && touchInput.DIRECTION === 'RIGHT') {
-            touchInput.ACTIVE = true;
+          if (isLeft) {
+            // Set DPAD_LEFT Touch Input Active
+            findDpadTouchInput(keyMap, touchInput.ID, 'LEFT').ACTIVE = true;
           } else {
-            touchInput.ACTIVE = false;
+            findDpadTouchInput(keyMap, touchInput.ID, 'RIGHT').ACTIVE = true;
           }
         }
       } else {
         var isUp = touchY < touchInput.BOUNDING_RECT.height / 2;
-        if (isUp && touchInput.DIRECTION === 'UP') {
-          touchInput.ACTIVE = true;
-        } else if (!isUp && touchInput.DIRECTION === 'DOWN') {
-          touchInput.ACTIVE = true;
+        if (isUp) {
+          findDpadTouchInput(keyMap, touchInput.ID, 'UP').ACTIVE = true;
         } else {
-          touchInput.ACTIVE = false;
+          findDpadTouchInput(keyMap, touchInput.ID, 'DOWN').ACTIVE = true;
         }
       }
     }
 
-    // Button Type
-    if (touchInput.TYPE === 'BUTTON') {
-      touchInput.ACTIVE = true;
+    // Analog Type
+    if (touchInput.TYPE === 'ANALOG') {
+      // Find our Horizontal Axis
+      var horizontalDifferenceFromCenter = touchX - rectCenterX;
+      var horizontalAxis = horizontalDifferenceFromCenter / rectCenterX;
+      if (horizontalAxis > 1) {
+        horizontalAxis = 1.0;
+      } else if (horizontalAxis < -1) {
+        horizontalAxis = -1.0;
+      }
+
+      // Find our Vertical Axis
+      var verticalDifferenceFromCenter = touchY - rectCenterY;
+      var verticalAxis = verticalDifferenceFromCenter / rectCenterY;
+      if (verticalAxis > 1) {
+        verticalAxis = 1.0;
+      } else if (verticalAxis < -1) {
+        verticalAxis = -1.0;
+      }
+
+      // Apply styles to element
+      var translateX = rectCenterX * horizontalAxis / 2;
+      var translateY = rectCenterY * verticalAxis / 2;
+      touchInput.ELEMENT.style.transform = 'translate(' + translateX + 'px, ' + translateY + 'px)';
+
+      // Set Axis on keyMap
+      touchMap[additionalArguments[0] + '_ANALOG_HORIZONTAL_AXIS'] = horizontalAxis;
+      touchMap[additionalArguments[0] + '_ANALOG_VERTICAL_AXIS'] = verticalAxis;
+
+      // Set Analog Direction State
+      touchMap[additionalArguments[0] + '_ANALOG_UP'] = verticalAxis < 0;
+      touchMap[additionalArguments[0] + '_ANALOG_RIGHT'] = horizontalAxis > 0;
+      touchMap[additionalArguments[0] + '_ANALOG_DOWN'] = verticalAxis > 0;
+      touchMap[additionalArguments[0] + '_ANALOG_LEFT'] = horizontalAxis < 0;
     }
   } else {
     // Not active
 
-    // Handle Dpad Type
-    if (touchInput.TYPE === 'DPAD') {
-      resetTouchDpad.bind(this)();
-    }
+    touchInput.MOUSEDOWN = false;
 
     // Button Type
     if (touchInput.TYPE === 'BUTTON') {
       touchInput.ACTIVE = false;
+      return;
+    }
+
+    // Handle Dpad Type
+    if (touchInput.TYPE === 'DPAD') {
+      resetTouchDpad.bind(this)();
+      return;
+    }
+
+    if (touchInput.TYPE === 'ANALOG') {
+      resetTouchAnalog(touchInput, touchMap, additionalArguments);
+      return;
     }
   }
 }
@@ -699,6 +780,7 @@ var ResponsiveGamepadService = function () {
     this.gamepadAnalogStickDeadZone = 0.25;
     this.keyMap = undefined;
     this.keyMapKeys = undefined;
+    this.touchMap = undefined;
     this.enabled = false;
     this.addedEventListeners = false;
   }
@@ -715,6 +797,7 @@ var ResponsiveGamepadService = function () {
       // TODO: Verify it is a valid keymap passed
       this.keyMap = keyMap || KEYMAP();
       this.keyMapKeys = Object.keys(this.keyMap);
+      this.touchMap = {};
 
       // Add our key event listeners
       // Wrapping in this for preact prerender
@@ -754,19 +837,13 @@ var ResponsiveGamepadService = function () {
   }, {
     key: 'addTouchInput',
     value: function addTouchInput(element, inputType) {
-      var _this = this;
 
       // Get any additional arguments
       var originalArguments = [].concat(Array.prototype.slice.call(arguments));
       var additionalArguments = [].concat(toConsumableArray(originalArguments.slice(2)));
 
-      // Create our touch handler
-      var touchHandler = function touchHandler(touchInput, event) {
-        updateTouchpad.bind(_this)(touchInput, event);
-      };
-
       // Declare our touch input
-      var touchInputId = createTouchInput(element, inputType, touchHandler, this.keyMap, additionalArguments);
+      var touchInputId = createTouchInput(element, inputType, updateTouchpad.bind(this), this.keyMap, this.touchMap, additionalArguments);
 
       // Return the touchInput ID so that is may be removed later
       return touchInputId;
@@ -774,15 +851,15 @@ var ResponsiveGamepadService = function () {
   }, {
     key: 'removeTouchInput',
     value: function removeTouchInput(touchInputId) {
-      var _this2 = this;
+      var _this = this;
 
       // Search for the input in our touch pad for every key
       var foundId = false;
 
       this.keyMapKeys.forEach(function (keyMapKey) {
-        _this2.keyMap[keyMapKey].TOUCHPAD.forEach(function (input, index) {
+        _this.keyMap[keyMapKey].TOUCHPAD.forEach(function (input, index) {
           if (input.ID === touchInputId) {
-            _this2.keyMap[keyMapKey].TOUCHPAD.splice(touchInputIndex, 1);
+            _this.keyMap[keyMapKey].TOUCHPAD.splice(touchInputIndex, 1);
             foundId = true;
           }
         });
@@ -793,7 +870,7 @@ var ResponsiveGamepadService = function () {
   }, {
     key: 'getState',
     value: function getState() {
-      var _this3 = this;
+      var _this2 = this;
 
       if (!this.enabled) {
         return {};
@@ -810,10 +887,10 @@ var ResponsiveGamepadService = function () {
       var controllerState = {};
 
       // Loop through our Keys, and quickly build our controller state
-      this.keyMapKeys.forEach(function (key) {
+      Object.keys(this.keyMap).forEach(function (key) {
 
         // Find if any of the keyboard, gamepad or touchpad buttons are pressed
-        var keyboardState = _this3.keyMap[key].KEYBOARD.some(function (keyInput) {
+        var keyboardState = _this2.keyMap[key].KEYBOARD.some(function (keyInput) {
           return keyInput.ACTIVE;
         });
 
@@ -823,7 +900,7 @@ var ResponsiveGamepadService = function () {
         }
 
         // Find if any of the keyboard, gamepad or touchpad buttons are pressed
-        var gamepadState = _this3.keyMap[key].GAMEPAD.some(function (gamepadInput) {
+        var gamepadState = _this2.keyMap[key].GAMEPAD.some(function (gamepadInput) {
           return gamepadInput.ACTIVE;
         });
 
@@ -833,17 +910,50 @@ var ResponsiveGamepadService = function () {
         }
 
         // Find if any of the keyboard, gamepad or touchpad buttons are pressed
-        var touchState = _this3.keyMap[key].TOUCHPAD.some(function (touchInput) {
+        var touchState = _this2.keyMap[key].TOUCHPAD.some(function (touchInput) {
           return touchInput.ACTIVE;
         });
 
         if (touchState) {
-          controllerState[key] = true;
+          controllerState[key] = touchState;
           return;
         }
 
         controllerState[key] = false;
       });
+
+      // Assign Truthy values from the touchMap
+      Object.keys(this.touchMap).forEach(function (touchMapKey) {
+        if (_this2.touchMap[touchMapKey]) {
+          controllerState[touchMapKey] = _this2.touchMap[touchMapKey];
+        }
+      });
+
+      // Get our Analog Stick Axis
+      // If not provided by touch pad
+      var gamepad = getGamepads()[0];
+      if (gamepad) {
+        controllerState.LEFT_ANALOG_HORIZONTAL_AXIS = getAnalogStickAxis(gamepad, 0);
+        controllerState.LEFT_ANALOG_VERTICAL_AXIS = getAnalogStickAxis(gamepad, 1);
+        controllerState.RIGHT_ANALOG_HORIZONTAL_AXIS = getAnalogStickAxis(gamepad, 2);
+        controllerState.RIGHT_ANALOG_VERTICAL_AXIS = getAnalogStickAxis(gamepad, 3);
+      } else {
+
+        if (!controllerState.LEFT_ANALOG_HORIZONTAL_AXIS) {
+          controllerState.LEFT_ANALOG_HORIZONTAL_AXIS = analogBooleanToAxis(controllerState.LEFT_ANALOG_RIGHT, controllerState.LEFT_ANALOG_LEFT);
+        }
+        if (!controllerState.LEFT_ANALOG_VERTICAL_AXIS) {
+          controllerState.LEFT_ANALOG_VERTICAL_AXIS = analogBooleanToAxis(controllerState.LEFT_ANALOG_DOWN, controllerState.LEFT_ANALOG_UP);
+        }
+
+        if (!controllerState.RIGHT_ANALOG_HORIZONTAL_AXIS) {
+          controllerState.RIGHT_ANALOG_HORIZONTAL_AXIS = analogBooleanToAxis(controllerState.RIGHT_ANALOG_RIGHT, controllerState.RIGHT_ANALOG_LEFT);
+        }
+
+        if (!controllerState.RIGHT_ANALOG_VERTICAL_AXIS) {
+          controllerState.RIGHT_ANALOG_VERTICAL_AXIS = analogBooleanToAxis(controllerState.RIGHT_ANALOG_DOWN, controllerState.RIGHT_ANALOG_UP);
+        }
+      }
 
       // Alias some other values for convienence
       controllerState.UP = controllerState.DPAD_UP || controllerState.LEFT_ANALOG_UP || false;
@@ -859,21 +969,6 @@ var ResponsiveGamepadService = function () {
       if (controllerState.RIGHT && controllerState.LEFT) {
         controllerState.RIGHT = false;
         controllerState.LEFT = false;
-      }
-
-      // Get our Analog Stick Axis
-      var gamepad = getGamepads()[0];
-      if (gamepad) {
-        controllerState.LEFT_ANALOG_HORIZONTAL_AXIS = getAnalogStickAxis(gamepad, 0);
-        controllerState.LEFT_ANALOG_VERTICAL_AXIS = getAnalogStickAxis(gamepad, 1);
-        controllerState.RIGHT_ANALOG_HORIZONTAL_AXIS = getAnalogStickAxis(gamepad, 2);
-        controllerState.RIGHT_ANALOG_VERTICAL_AXIS = getAnalogStickAxis(gamepad, 3);
-      } else {
-        controllerState.LEFT_ANALOG_HORIZONTAL_AXIS = analogBooleanToAxis(controllerState.LEFT_ANALOG_RIGHT, controllerState.LEFT_ANALOG_LEFT);
-        controllerState.LEFT_ANALOG_VERTICAL_AXIS = analogBooleanToAxis(controllerState.LEFT_ANALOG_DOWN, controllerState.LEFT_ANALOG_UP);
-
-        controllerState.RIGHT_ANALOG_HORIZONTAL_AXIS = analogBooleanToAxis(controllerState.RIGHT_ANALOG_RIGHT, controllerState.RIGHT_ANALOG_LEFT);
-        controllerState.RIGHT_ANALOG_VERTICAL_AXIS = analogBooleanToAxis(controllerState.RIGHT_ANALOG_DOWN, controllerState.RIGHT_ANALOG_UP);
       }
 
       // Return the controller state in case we need something from it
