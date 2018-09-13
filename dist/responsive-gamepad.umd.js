@@ -158,7 +158,7 @@
     return input;
   }
 
-  function createTouchInput(element, inputType, updateTouchpad, keyMap, analogMaps, additionalArguments) {
+  function createTouchInput(element, inputType, updateTouchInputRect, updateTouchInput, keyMap, analogMaps, additionalArguments) {
 
     if (!Object.keys(touchInputTypes).includes(inputType)) {
       return false;
@@ -171,8 +171,35 @@
     touchInput.TYPE = inputType;
 
     // Add our bounding rect
-    var boundingRect = touchInput.ELEMENT.getBoundingClientRect();
-    touchInput.BOUNDING_RECT = boundingRect;
+    var updateRectHandler = updateTouchInputRect;
+    updateRectHandler(touchInput);
+
+    // Define our eventListener functions
+    var eventListenerCallback = function eventListenerCallback(event) {
+      updateTouchInput(touchInput, keyMap, analogMaps[touchInput.ID], additionalArguments, event);
+    };
+
+    // Add event listeners to the element
+    window.addEventListener("resize", updateRectHandler);
+    touchInput.ELEMENT.addEventListener("touchstart", eventListenerCallback);
+    touchInput.ELEMENT.addEventListener("touchmove", eventListenerCallback);
+    touchInput.ELEMENT.addEventListener("touchend", eventListenerCallback);
+    touchInput.ELEMENT.addEventListener("mousedown", eventListenerCallback);
+    touchInput.ELEMENT.addEventListener("mousemove", eventListenerCallback);
+    touchInput.ELEMENT.addEventListener("mouseup", eventListenerCallback);
+    touchInput.ELEMENT.addEventListener("mouseleave", eventListenerCallback);
+
+    // Create a dispose function on the touch input
+    touchInput.UNLISTEN = function () {
+      window.removeEventListener("resize", updateRectHandler);
+      touchInput.ELEMENT.removeEventListener("touchstart", eventListenerCallback);
+      touchInput.ELEMENT.removeEventListener("touchmove", eventListenerCallback);
+      touchInput.ELEMENT.removeEventListener("touchend", eventListenerCallback);
+      touchInput.ELEMENT.removeEventListener("mousedown", eventListenerCallback);
+      touchInput.ELEMENT.removeEventListener("mousemove", eventListenerCallback);
+      touchInput.ELEMENT.removeEventListener("mouseup", eventListenerCallback);
+      touchInput.ELEMENT.removeEventListener("mouseleave", eventListenerCallback);
+    };
 
     // Add the touch input to the appropriate keymap
     if (inputType === touchInputTypes.BUTTON) {
@@ -187,22 +214,10 @@
       });
     } else if (inputType === touchInputTypes.ANALOG) {
       // Since we are axes, and not on/off handled in updateTouchpad
-      analogMaps[touchInput.ID] = {};
+      analogMaps[touchInput.ID] = {
+        TOUCH_INPUT: touchInput
+      };
     }
-
-    // Define our eventListener functions
-    var eventListenerCallback = function eventListenerCallback(event) {
-      updateTouchpad(touchInput, keyMap, analogMaps[touchInput.ID], additionalArguments, event);
-    };
-
-    // Add event listeners to the element
-    touchInput.ELEMENT.addEventListener("touchstart", eventListenerCallback);
-    touchInput.ELEMENT.addEventListener("touchmove", eventListenerCallback);
-    touchInput.ELEMENT.addEventListener("touchend", eventListenerCallback);
-    touchInput.ELEMENT.addEventListener("mousedown", eventListenerCallback);
-    touchInput.ELEMENT.addEventListener("mousemove", eventListenerCallback);
-    touchInput.ELEMENT.addEventListener("mouseup", eventListenerCallback);
-    touchInput.ELEMENT.addEventListener("mouseleave", eventListenerCallback);
 
     return touchInput.ID;
   }
@@ -425,23 +440,16 @@
   }
 
   // Function to update touch button position and size
-  function updateTouchpadRect() {
-    var _this2 = this;
-
+  function updateTouchInputRect(touchInput) {
     // Read from the DOM, and get each of our elements position, doing this here, as it is best to read from the dom in sequence
     // use element.getBoundingRect() top, bottom, left, right to get clientX and clientY in touch events :)
     // https://stackoverflow.com/questions/442404/retrieve-the-position-x-y-of-an-html-element
-    //console.log("GamepadComponent: Updating Rect()...");
-    this.keyMapKeys.forEach(function (key) {
-      _this2.keyMap[key].TOUCHPAD.forEach(function (touchInput, index) {
-        var boundingRect = _this2.keyMap[key].TOUCHPAD[index].ELEMENT.getBoundingClientRect();
-        _this2.keyMap[key].TOUCHPAD[index].BOUNDING_RECT = boundingRect;
-      });
-    });
+    var boundingRect = touchInput.ELEMENT.getBoundingClientRect();
+    touchInput.BOUNDING_RECT = boundingRect;
   }
 
   // Function called on an event of a touchInput SVG Element
-  function updateTouchpad(touchInput, keyMap, analogMap, additionalArguments, event) {
+  function updateTouchInput(touchInput, keyMap, analogMap, additionalArguments, event) {
 
     if (!this.enabled) {
       return;
@@ -796,7 +804,7 @@
       this.keyMapKeys = undefined;
       this.analogMaps = undefined;
       this.enabled = false;
-      this.addedEventListeners = false;
+      this.keyEventUnlistener = undefined;
     }
 
     createClass(ResponsiveGamepadService, [{
@@ -815,13 +823,17 @@
 
         // Add our key event listeners
         // Wrapping in this for preact prerender
-        if (!this.addedEventListeners && typeof window !== "undefined") {
-          window.addEventListener('keyup', updateKeyboard.bind(this));
-          window.addEventListener('keydown', updateKeyboard.bind(this));
-          // Add a resize listen to update the gamepad rect on resize
-          window.addEventListener("resize", updateTouchpadRect.bind(this));
+        if (typeof window !== "undefined") {
 
-          this.addedEventListeners = true;
+          var updateKeyboardHandler = updateKeyboard.bind(this);
+
+          window.addEventListener('keyup', updateKeyboardHandler);
+          window.addEventListener('keydown', updateKeyboardHandler);
+
+          this.keyEventUnlistener = function () {
+            window.removeEventListener('keyup', updateKeyboardHandler);
+            window.removeEventListener('keydown', updateKeyboardHandler);
+          };
         }
 
         this.enabled = true;
@@ -832,7 +844,27 @@
     }, {
       key: 'disable',
       value: function disable() {
+        var _this = this;
+
+        // Dispose Key Events
+        if (this.keyEventUnlistener) {
+          this.keyEventUnlistener();
+          this.keyEventUnlistener = undefined;
+        }
+
+        // Dispose Touch Events
+        this.keyMapKeys.forEach(function (keyMapKey) {
+          _this.keyMap[keyMapKey].TOUCHPAD.forEach(function (input) {
+            input.UNLISTEN();
+          });
+        });
+        Object.keys(this.analogMaps).forEach(function (analogMapsKey) {
+          _this.analogMaps[analogMapsKey].TOUCH_INPUT.UNLISTEN();
+        });
+
+        // Dispose of the key map
         this.keyMap = undefined;
+
         this.enabled = false;
       }
     }, {
@@ -857,7 +889,7 @@
         var additionalArguments = [].concat(toConsumableArray(originalArguments.slice(2)));
 
         // Declare our touch input
-        var touchInputId = createTouchInput(element, inputType, updateTouchpad.bind(this), this.keyMap, this.analogMaps, additionalArguments);
+        var touchInputId = createTouchInput(element, inputType, updateTouchInputRect.bind(this), updateTouchInput.bind(this), this.keyMap, this.analogMaps, additionalArguments);
 
         // Return the touchInput ID so that is may be removed later
         return touchInputId;
@@ -865,15 +897,16 @@
     }, {
       key: 'removeTouchInput',
       value: function removeTouchInput(touchInputId) {
-        var _this = this;
+        var _this2 = this;
 
         // Search for the input in our touch pad for every key
         var foundId = false;
 
         this.keyMapKeys.forEach(function (keyMapKey) {
-          _this.keyMap[keyMapKey].TOUCHPAD.forEach(function (input, index) {
+          _this2.keyMap[keyMapKey].TOUCHPAD.forEach(function (input, index) {
             if (input.ID === touchInputId) {
-              _this.keyMap[keyMapKey].TOUCHPAD.splice(index, 1);
+              input.UNLISTEN();
+              _this2.keyMap[keyMapKey].TOUCHPAD.splice(index, 1);
               foundId = true;
             }
           });
@@ -886,7 +919,8 @@
         // Next, check the analog maps
         Object.keys(this.analogMaps).forEach(function (analogMapsKey) {
           if (analogMapsKey === touchInputId) {
-            delete _this.analogMaps[analogMapsKey];
+            _this2.analogMaps[analogMapsKey].TOUCH_INPUT.UNLISTEN();
+            delete _this2.analogMaps[analogMapsKey];
             foundId = true;
           }
         });
@@ -896,7 +930,7 @@
     }, {
       key: 'getState',
       value: function getState() {
-        var _this2 = this;
+        var _this3 = this;
 
         if (!this.enabled) {
           return {};
@@ -916,7 +950,7 @@
         Object.keys(this.keyMap).forEach(function (key) {
 
           // Find if any of the keyboard, gamepad or touchpad buttons are pressed
-          var keyboardState = _this2.keyMap[key].KEYBOARD.some(function (keyInput) {
+          var keyboardState = _this3.keyMap[key].KEYBOARD.some(function (keyInput) {
             return keyInput.ACTIVE;
           });
 
@@ -926,7 +960,7 @@
           }
 
           // Find if any of the keyboard, gamepad or touchpad buttons are pressed
-          var gamepadState = _this2.keyMap[key].GAMEPAD.some(function (gamepadInput) {
+          var gamepadState = _this3.keyMap[key].GAMEPAD.some(function (gamepadInput) {
             return gamepadInput.ACTIVE;
           });
 
@@ -936,7 +970,7 @@
           }
 
           // Find if any of the keyboard, gamepad or touchpad buttons are pressed
-          var touchState = _this2.keyMap[key].TOUCHPAD.some(function (touchInput) {
+          var touchState = _this3.keyMap[key].TOUCHPAD.some(function (touchInput) {
             return touchInput.ACTIVE;
           });
 
@@ -950,8 +984,14 @@
 
         // Assign Truthy values from the analogMaps
         Object.keys(this.analogMaps).forEach(function (analogMapsKey) {
-          Object.keys(_this2.analogMaps[analogMapsKey]).forEach(function (analogMapKey) {
-            var stateValue = _this2.analogMaps[analogMapsKey][analogMapKey];
+          Object.keys(_this3.analogMaps[analogMapsKey]).forEach(function (analogMapKey) {
+
+            // Skip the Touch Input on the analog Map
+            if (analogMapKey === 'TOUCH_INPUT') {
+              return;
+            }
+
+            var stateValue = _this3.analogMaps[analogMapsKey][analogMapKey];
             if (stateValue) {
               controllerState[analogMapKey] = stateValue;
             }
