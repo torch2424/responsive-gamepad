@@ -29,7 +29,9 @@ This is a quick **Tl;DR** on installing and using responsive-gamepad:
 
 4. `ResponsiveGamepad.getState();`
 
-# Notable Projects
+Please see the Keymaps section for what Responsive Gamepad Keys represent on a "Standard" Controller.
+
+# Projects Using `responsive-gamepad`
 
 * [WasmBoy](https://github.com/torch2424/wasmBoy) - Gameboy / Gameboy Color Emulator written for Web Assembly using AssemblyScript.
 
@@ -87,7 +89,43 @@ Boolean.
 
 `ResponsiveGamepad.addTouchInputs(element, inputType, ...additionArgumentsDependingOnInputType)`
 
-TODO:
+**Params**
+
+* element: HTML element to represent the input
+
+* inputType: String to represent the type of input (See more below)
+
+...additionArgumentsDependingOnInputType Represents any number of arguments depending on the provided inputType. See more below.
+
+**Returns**
+
+* touchInputId: String
+
+**Input Types**
+
+Input Types represent the type of touch input you would like to use. Input types can be obtained by importing `TOUCH_INPUT_TYPES`. Example:
+
+`import {ResponsiveGamepad, TOUCH_INPUT_TYPES} from 'responsive-gamepad';`
+
+As of this writing the available gamepad types are:
+
+**BUTTON**
+
+`TOUCH_INPUT_TYPES.BUTTON` - A single on/off button touch element. Must pass the additional argument of a `RESPONSIVE_GAMEPAD_KEY`. Example:
+
+`ResponsiveGamepad.addTouchInput(myHtmlElement, TOUCH_INPUT_TYPES.BUTTON, RESPONSIVE_GAMEPAD_KEYS.A);` 
+
+**DPAD**
+
+`TOUCH_INPUT_TYPES.DPAD` - A 4 direction Dpad element. Behind the Scenes, the element will be divided into 4 "touch" sections, with a central deadzone, and some bias for horizontal vs vertical. This element will automatically occupy the `RESPONSIVE_GAMEPAD.DPAD_X` keys. Example:
+
+`ResponsiveGamepad.addTouchInput(myHtmlElement, TOUCH_INPUT_TYPES.DPAD);`
+
+**ANALOG**
+
+`TOUCH_INPUT_TYPES.ANALOG` - A movable element that will use its original center and it's current position to determine an analog Axis. The element passed in should represent the "analog stick", not an element containing both the "stick" and its "background". This required the additional argument of "LEFT" vs. "RIGHT". And will occupy the `RESPONSIVE_GAMEPAD.X_ANALOG_Y` respectively. Example:
+
+`ResponsiveGamepad.addTouchInput(myHtmlElement, TOUCH_INPUT_TYPES.ANALOG, 'LEFT')`
 
 ### removeTouchInput
 
@@ -115,8 +153,9 @@ ResponsiveGamepad.enable(KEYMAP_GAMEBOY());
 
 The default keymap, `KEYMAP` and `KEYMAP_DEFAULT`, is based on the **"Standard"** controller. Here is a modified image from the [w3c gamepad draft](https://w3c.github.io/gamepad/#remapping) on how it correlates to the default keymap:
 
+![Standard Controller Diagram](./assets/readmeStandardControllerLayout.jpg)
 
-TODO:
+* Note: The X in something like `Key_X` represents one of the many directions or axis it represents
 
 ### Custom Keymaps
 
