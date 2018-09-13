@@ -16,22 +16,22 @@ Handle Keyboard, Gamepad, and Touch Controls in the browser under a single API.
 # Table Of Contents
 
 * [Quick Start](#quick-start)
-  * [Projects Using responsive-gamepad](#projects-using-responsive-gamepad)
-  * [Instalation](#instalation)
-  * [API Usage](#api-usage)
-    * [enabled](#enabled)
-    * [disable](#disable)
-    * [isEnabled](#isenabled)
-    * [isIgnoringKeyEvents](#isignoringkeyevents)
-    * [addTouchInput](#addtouchinput)
-    * [removeTouchInput](#removetouchinput)
-  * [Keymaps](#keymaps)
-    * [Custom Keymaps](#custom-keymaps)
-  * [Contributing](#contributing)
-    * [Installation](#installation)
-    * [CLI Commands / Npm Scripts](#cli-commands--npm-scripts)
-  * [LICENSE](#license)
-  * [Other Notes](#other-notes)
+* [Projects Using responsive-gamepad](#projects-using-responsive-gamepad)
+* [Instalation](#instalation)
+* [API Usage](#api-usage)
+  * [enable](#enable)
+  * [disable](#disable)
+  * [isEnabled](#isenabled)
+  * [isIgnoringKeyEvents](#isignoringkeyevents)
+  * [addTouchInput](#addtouchinput)
+  * [removeTouchInput](#removetouchinput)
+* [Keymaps](#keymaps)
+  * [Custom Keymaps](#custom-keymaps)
+* [Contributing](#contributing)
+  * [Installation](#installation)
+  * [CLI Commands / Npm Scripts](#cli-commands--npm-scripts)
+* [LICENSE](#license)
+* [Other Notes](#other-notes)
 
 # Quick Start
 
@@ -65,7 +65,7 @@ First, import the `ResponsiveGamepad` singleton service with:
 
 `import {ResponsiveGamepad} from 'responsive-gamepad'`
 
-### enabled
+### enable
 
 `ResponsiveGamepad.enable(optionalKeymap)`
 
