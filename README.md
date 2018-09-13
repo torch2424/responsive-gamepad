@@ -45,7 +45,7 @@ This is a quick **Tl;DR** on installing and using responsive-gamepad:
 
 4. `ResponsiveGamepad.getState();`
 
-Please see the Keymaps section for what Responsive Gamepad Keys represent on a "Standard" Controller.
+Please see the [Keymaps](#keymaps) section for what Responsive Gamepad Keys represent on a "Standard" Controller.
 
 # Projects Using `responsive-gamepad`
 
