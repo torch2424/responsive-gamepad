@@ -171,8 +171,8 @@
     touchInput.TYPE = inputType;
 
     // Add our bounding rect
-    var updateRectHandler = updateTouchInputRect;
-    updateRectHandler(touchInput);
+    var updateRectHandler = updateTouchInputRect.bind(null, touchInput);
+    updateRectHandler();
 
     // Define our eventListener functions
     var eventListenerCallback = function eventListenerCallback(event) {
