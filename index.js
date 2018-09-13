@@ -1,6 +1,6 @@
 import './style';
 import { Component } from 'preact';
-import { ResponsiveGamepad, KEYMAP_DEFAULT } from './dist/responsive-gamepad.esm';
+import { ResponsiveGamepad, RESPONSIVE_GAMEPAD_KEYS, KEYMAP_DEFAULT, KEYMAP_GAMEBOY } from './dist/responsive-gamepad.esm';
 
 export default class App extends Component {
 
@@ -29,30 +29,33 @@ export default class App extends Component {
     });
 	}
 
-	enableGamepad() {
+	enableGamepad(keymap) {
 		// Initialize our gamepad
-		ResponsiveGamepad.enable(KEYMAP_DEFAULT());
+		ResponsiveGamepad.enable(keymap);
 
 		// Add our touch inputs
-		const dpadElement = document.getElementById('gamepadDpad');
+    const dpadElement = document.getElementById('gamepadDpad');
+    const analogStickElement = document.getElementById('gamepadLeftAnalog')
 		const startElement = document.getElementById('gamepadStart');
 		const aElement = document.getElementById('gamepadA');
 		const bElement = document.getElementById('gamepadB');
 
-		ResponsiveGamepad.addTouchInput('UP', dpadElement, 'DPAD', 'UP');
-		ResponsiveGamepad.addTouchInput('RIGHT', dpadElement, 'DPAD', 'RIGHT');
-		ResponsiveGamepad.addTouchInput('DOWN', dpadElement, 'DPAD', 'DOWN');
-		ResponsiveGamepad.addTouchInput('LEFT', dpadElement, 'DPAD', 'LEFT');
-		ResponsiveGamepad.addTouchInput('A', aElement, 'BUTTON');
-		ResponsiveGamepad.addTouchInput('B', bElement, 'BUTTON');
-		ResponsiveGamepad.addTouchInput('START', startElement, 'BUTTON');
+    ResponsiveGamepad.addTouchInput(dpadElement, 'DPAD');
+    ResponsiveGamepad.addTouchInput(analogStickElement, 'ANALOG', 'LEFT');
+    ResponsiveGamepad.addTouchInput(aElement, 'BUTTON', RESPONSIVE_GAMEPAD_KEYS.A);
+    ResponsiveGamepad.addTouchInput(bElement, 'BUTTON', RESPONSIVE_GAMEPAD_KEYS.B);
+    ResponsiveGamepad.addTouchInput(startElement, 'BUTTON', RESPONSIVE_GAMEPAD_KEYS.START);
 
 		this.setState({
 			...this.state,
 			touchSelectId: undefined
 		});
 		this.toggleTouchSelectInput();
-	}
+  }
+
+  enableGameboyKeymap() {
+    this.enableGamepad(KEYMAP_GAMEBOY())
+  }
 
 	disableGamepad() {
 		ResponsiveGamepad.disable();
@@ -73,7 +76,7 @@ export default class App extends Component {
 
 	toggleTouchSelectInput() {
 		if (this.state.touchSelectId) {
-			ResponsiveGamepad.removeTouchInput('SELECT', this.state.touchSelectId);
+      ResponsiveGamepad.removeTouchInput(this.state.touchSelectId);
 			this.setState({
 				...this.state,
 				touchSelectId: undefined
@@ -81,7 +84,7 @@ export default class App extends Component {
 		} else {
 
 			const selectElement = document.getElementById('gamepadSelect');
-			const touchSelectId = ResponsiveGamepad.addTouchInput('SELECT', selectElement, 'BUTTON');
+      const touchSelectId = ResponsiveGamepad.addTouchInput(selectElement, 'BUTTON', RESPONSIVE_GAMEPAD_KEYS.SELECT,);
 
 			this.setState({
 				touchSelectId: touchSelectId
@@ -92,10 +95,20 @@ export default class App extends Component {
 	render() {
 		return (
 			<div>
-				<h1>Responsive Gamepad</h1>
+				<h1>Responsive Gamepad Demo</h1>
 				<div class="githubLink">
 					<a href="https://github.com/torch2424/responsive-gamepad" target="_blank">Fork me on github</a>
-				</div>
+        </div>
+        <p>
+          This is the example demo for <a href="https://github.com/torch2424/responsive-gamepad" target="_blank">responsive-gamepad</a>.
+          Feel free to test this demo with:
+          <ul>
+            <li>Keyboard</li>
+            <li>Gamepad (Feel free to plug one into USB)</li>
+            <li>Touchpad (See the floating fixed element at the bottom of the screen)</li>
+          </ul>
+          Please scroll down to see the different features and examples the API provides, each with a color coded section.         
+        </p>
 
 				<div class="gamepadState">
 					<h3>Responsive Gamepad State:</h3>
@@ -107,16 +120,28 @@ export default class App extends Component {
 				</div>
 
 				<div class="addRemoveTouch">
-					<h3>Enabled/Disable</h3>
+          <h3>Enabled/Disable With Custom Keymaps</h3>
+
 					<p>Responsive Gamepad can be enabled and disabled (as a whole) as needed</p>
 					<div>
 						<button onClick={() => this.toggleResponsiveGamepad()} >
-							{ResponsiveGamepad.isEnabled() ? `Disable Responsive Gamepad` : 'Enable Responsive Gamepad'}
+							{ResponsiveGamepad.isEnabled() ? `Disable Responsive Gamepad` : 'Enable Default Responsive Gamepad'}
 						</button>
-					</div>
+          </div>
+
+          <p>
+            Custom Keymaps allow for altering which inputs represent which responsive-gamepad state key.
+            For instance, the "gameboy" keymap merges the X/Y buttons with the A/B buttons, and more!
+            You must disable the keymap to enable the gameboy keymap
+          </p>
+          <div>
+            <button onClick={() => this.enableGameboyKeymap()} disabled={ResponsiveGamepad.isEnabled()}>
+              Enable Gameboy Keymap
+            </button>
+          </div>
 				</div>
 
-				<div class="addRemoveTouch">
+				<div class="dynamicTouchInput">
 					<h3>Dynamic Touch Input</h3>
 					<p>Touch inputs can be added/removed on the fly!</p>
 					<div>
@@ -127,7 +152,7 @@ export default class App extends Component {
 				</div>
 
 				<div class="preventDefault">
-					<h3>Prevent Default</h3>
+					<h3>Prevent Default (Keyboard Only)</h3>
 					<p>I am very tall to show off `event.preventDefault()`. E.g arrow keys wont scroll if in the keymap. But typing will work on input type form fields!</p>
 					<input type="text" />
 					<br />
@@ -142,36 +167,52 @@ export default class App extends Component {
 					</select>
 				</div>
 
-				<div class="gamepad">
+        <div class="gamepad">
+
+          {/* Left Analog */}
+          <div class="analog-container">
+
+            <svg id="gamepadLeftAnalog" class="analog-stick" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="12" cy="12" r="6"/>
+            </svg>
+            <svg id="gamepadLeftAnalogBg" class="analog-background" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="12" cy="12" r="12"/>
+            </svg>
+          </div>
+
 
 					{/* DPAD */}
-					<svg id="gamepadDpad" fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+					<svg id="gamepadDpad" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
 					    <path d="M0 0h24v24H0z" fill="none"/>
 					    <path d="M15 7.5V2H9v5.5l3 3 3-3zM7.5 9H2v6h5.5l3-3-3-3zM9 16.5V22h6v-5.5l-3-3-3 3zM16.5 9l-3 3 3 3H22V9h-5.5z"/>
-					</svg>
+            </svg>
 
 					{/* Start */}
 					<svg id="gamepadStart" fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
 					    <path d="M19 13H5v-2h14v2z"/>
-					    <path d="M0 0h24v24H0z" fill="none"/>
+              <path d="M0 0h24v24H0z" fill="none"/>
+              <text x="5.5" y="18.5">Start</text>
 					</svg>
 
 					{/* Select */}
-					<svg id="gamepadSelect" fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+					<svg id="gamepadSelect" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
 					    <path d="M19 13H5v-2h14v2z"/>
-					    <path d="M0 0h24v24H0z" fill="none"/>
+              <path d="M0 0h24v24H0z" fill="none"/>
+              <text x="3.5" y="18.5">Select</text>
 					</svg>
 
 					{/* A */}
-					<svg id="gamepadA" fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+					<svg id="gamepadA" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
 					    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/>
-					    <path d="M0 0h24v24H0z" fill="none"/>
+              <path d="M0 0h24v24H0z" fill="none"/>
+              <text x="9.75" y="14">A</text>
 					</svg>
 
 					{/* B */}
-					<svg id="gamepadB" fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+					<svg id="gamepadB" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
 					    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/>
-					    <path d="M0 0h24v24H0z" fill="none"/>
+              <path d="M0 0h24v24H0z" fill="none"/>
+              <text x="9.75" y="14">B</text>
 					</svg>
 				</div>
 			</div>

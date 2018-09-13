@@ -17,8 +17,7 @@
     "lib:watch": "npx rollup -c -w",
     "lib:build": "npx rollup -c",
     "lib:deploy": "npm run lib:build && npx np",
-    "test": "echo \"No tests specified\"",
-    "lint": "eslint src"
+    "test": "echo \"No tests specified\""
   },
   "files": [
     "dist",
@@ -82,7 +81,7 @@
     "preact-cli": "^2.0.0",
     "preact-compat": "^3.17.0",
     "promise-polyfill": "^7.1.0",
-    "rollup": "^0.56.2",
+    "rollup": "^0.65.2",
     "rollup-plugin-babel": "^3.0.3",
     "rollup-plugin-commonjs": "^8.3.0",
     "rollup-plugin-node-resolve": "^3.0.3"
