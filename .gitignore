@@ -3,8 +3,8 @@
 
 # Preact
 node_modules
-/build
-/*.log
+dist/
+build/
 
 # Logs
 logs

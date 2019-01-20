@@ -5,18 +5,16 @@
   "main": "dist/responsive-gamepad.cjs.js",
   "module": "dist/responsive-gamepad.esm.js",
   "browser": "dist/responsive-gamepad.umd.js",
+  "iife": "dist/responsive-gamepad.iife.js",
   "scripts": {
     "start": "npm run dev",
-    "dev": "npx concurrently --kill-others --names \"DEMO,LIB\" -c \"bgBlue.bold,bgGreen.bold\" \"npm run demo:watch\" \"npm run lib:watch\"",
-    "demo": "if-env NODE_ENV=production && npm run -s demo:build:serve || npm run -s demo:watch",
-    "demo:serve": "npm run demo:watch",
-    "demo:watch": "preact watch",
-    "demo:build": "preact build",
-    "demo:build:serve": "npm run demo:build && preact serve --cwd docs",
-    "demo:deploy": "npm run lib:build && npm run demo:build && npx gh-pages -d build",
-    "lib:watch": "npx rollup -c -w",
-    "lib:build": "npx rollup -c",
-    "lib:deploy": "npm run lib:build && npx np",
+    "watch": "npm run dev",
+    "dev": "npx rollup -c -w",
+    "build": "npx rollup -c",
+    "lib:deploy": "npx run-s build lib:deploy:np",
+    "lib:deploy:np": "npx np",
+    "demo:deploy": "npx run-s build demo:deploy:pages",
+    "demo:deploy:pages": "npx gh-pages -d build",
     "test": "echo \"No tests specified\""
   },
   "files": [
@@ -48,42 +46,21 @@
     "url": "https://github.com/torch2424/responsive-gamepad/issues"
   },
   "homepage": "https://github.com/torch2424/responsive-gamepad#readme",
-  "eslintConfig": {
-    "extends": "eslint-config-synacor"
-  },
-  "eslintIgnore": [
-    "build/*"
-  ],
-  "babel": {
-    "presets": [
-      [
-        "env",
-        {
-          "modules": false
-        }
-      ]
-    ],
-    "plugins": [
-      "external-helpers"
-    ]
-  },
   "dependencies": {},
   "devDependencies": {
-    "babel-plugin-external-helpers": "^6.22.0",
-    "babel-preset-env": "^1.6.1",
-    "concurrently": "^3.5.1",
-    "eslint": "^4.5.0",
-    "eslint-config-synacor": "^1.1.0",
-    "gh-pages": "^1.1.0",
-    "if-env": "^1.0.0",
-    "np": "^3.0.4",
-    "preact": "^8.2.1",
-    "preact-cli": "^2.0.0",
-    "preact-compat": "^3.17.0",
-    "promise-polyfill": "^7.1.0",
-    "rollup": "^0.65.2",
-    "rollup-plugin-babel": "^3.0.3",
-    "rollup-plugin-commonjs": "^8.3.0",
-    "rollup-plugin-node-resolve": "^3.0.3"
+    "@babel/core": "^7.2.2",
+    "@babel/plugin-proposal-class-properties": "^7.2.3",
+    "@babel/plugin-proposal-export-default-from": "^7.2.0",
+    "@babel/plugin-proposal-object-rest-spread": "^7.2.0",
+    "@babel/plugin-transform-react-jsx": "^7.2.0",
+    "gh-pages": "^2.0.1",
+    "np": "^3.1.0",
+    "npm-run-all": "^4.1.5",
+    "rollup": "^1.1.0",
+    "rollup-plugin-babel": "^4.3.0",
+    "rollup-plugin-bundle-size": "^1.0.2",
+    "rollup-plugin-commonjs": "^9.2.0",
+    "rollup-plugin-node-resolve": "^4.0.0",
+    "rollup-plugin-serve": "^1.0.0"
   }
 }

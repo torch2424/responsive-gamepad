@@ -1,43 +1,84 @@
 import resolve from 'rollup-plugin-node-resolve';
 import commonjs from 'rollup-plugin-commonjs';
 import babel from 'rollup-plugin-babel';
+import serve from 'rollup-plugin-serve';
+import bundleSize from 'rollup-plugin-bundle-size';
 import pkg from './package.json';
 
-export default [
-	// browser-friendly UMD build
-	{
-		input: 'lib/index.js',
-		output: {
-			name: "ResponsiveGamepad",
-			file: pkg.browser,
-			format: 'umd'
-		},
-		plugins: [
-			resolve(), // so Rollup can find node modules
-			commonjs(), // so Rollup can convert node module to an ES module
-      babel({ // so Rollup can convert unsupported es6 code to es5
-				exclude: ['node_modules/**']
-			})
-		]
-	},
+const fs = require('fs');
 
-	// CommonJS (for Node) and ES module (for bundlers) build.
-	// (We could have three entries in the configuration array
-	// instead of two, but it's quicker to generate multiple
-	// builds from a single configuration where possible, using
-	// an array for the `output` option, where we can specify
-	// `file` and `format` for each target)
+const writeIndexHtmlToBuild = bundleName => {
+  let indexHtml = fs.readFileSync('demo/index.html', 'utf8');
+  indexHtml = indexHtml.replace('<%BUNDLE%>', bundleName.replace('build/', ''));
+  if (!fs.existsSync('build/')){
+    fs.mkdirSync('build/');
+  }
+  fs.writeFileSync('build/index.html', indexHtml, 'utf8');
+};
+
+const babelPluginConfig = {
+  exclude: ['node_modules/**'],
+  plugins: [
+    ['@babel/plugin-proposal-class-properties'],
+    ['@babel/plugin-proposal-object-rest-spread'],
+    ['@babel/plugin-transform-react-jsx', { pragma: 'h' }],
+    ['@babel/plugin-proposal-export-default-from']
+  ]
+};
+
+let plugins = [
+  resolve(), // so Rollup can find node modules
+  commonjs(), // so Rollup can convert node module to an ES module
+  babel(babelPluginConfig),
+];
+
+if (process.env.ROLLUP_WATCH) {
+  plugins = [
+    ...plugins,
+    serve({
+      contentBase: ['dist/', 'build/', 'lib/'],
+      port: 8080
+    })
+  ]
+}
+
+plugins = [
+  ...plugins,
+  bundleSize()
+];
+
+writeIndexHtmlToBuild('index.iife.js');
+
+export default [
 	{
-		input: 'lib/index.js',
+    input: 'lib/index.js',
 		output: [
-			{ file: pkg.main, format: 'cjs' },
-			{ file: pkg.module, format: 'es' }
+      { 
+        file: pkg.main, 
+        format: 'cjs' 
+      },
+      { 
+        file: pkg.module, 
+        format: 'es' 
+      },
+      { 
+        file: pkg.iife, 
+        format: 'iife',
+        name: 'ResponsiveGamepad'
+      },
+      { 
+        file: pkg.browser, 
+        format: 'umd',
+        name: 'ResponsiveGamepad'
+      }
 		],
-    plugins: [
-      resolve(), // so Rollup can find node modules
-			babel({
-				exclude: ['node_modules/**']
-			})
-		]
-	}
+    plugins
+  },
+  {
+    input: 'demo/index.js',
+    output: [
+      { file: 'build/index.iife.js', format: 'iife' }
+    ],
+    plugins
+  }
 ];
