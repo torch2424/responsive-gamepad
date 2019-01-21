@@ -6,7 +6,7 @@ import ResponsiveGamepad from 'responsive-gamepad';
 ResponsiveGamepad.enable();
 
 // Certain Key Event
-const unsubscribeFunction = ResponsiveGamepad.onInputsActive(
+const unsubscribeFunction = ResponsiveGamepad.onInputsChange(
   ResponsiveGamepad.RESPONSIVE_GAMEPAD_INPUTS.DPAD_DOWN, 
   ResponsiveGamepadState => {
     // Do Stuff
@@ -14,10 +14,13 @@ const unsubscribeFunction = ResponsiveGamepad.onInputsActive(
 );
 
 // Key Combination
-const unsubscribeFunction = ResponsiveGamepad.onInputsActive(
+const unsubscribeFunction = ResponsiveGamepad.onInputsChange(
   [
     ResponsiveGamepad.RESPONSIVE_GAMEPAD_INPUTS.SPECIAL,
     ResponsiveGamepad.RESPONSIVE_GAMEPAD_INPUTS.DPAD_DOWN,
   ], ResponsiveGamepadState => {
   // Do Stuff
-});
+  });
+
+// onInputsChange will fire when any of the keys go from enabled, 
+// to disabled, or vice versa.

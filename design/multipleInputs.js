@@ -4,5 +4,6 @@ import ResponsiveGamepad from 'responsive-gamepad';
 
 ResponsiveGamepad.enable();
 
+// Enabled by default
 ResponsiveGamepad.enableMultipleDirectionInput();
 ResponsiveGamepad.disableMultipleDirectionInput();

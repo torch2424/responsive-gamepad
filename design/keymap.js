@@ -6,5 +6,7 @@ import ResponsiveGamepad from 'responsive-gamepad';
 ResponsiveGamepad.enable();
 
 ResponsiveGamepad.Keyboard.setKeysToResponsiveGamepadInput([
-  ["ArrowUp", "Numpad8", "KeyW"],
+  "ArrowUp", 
+  "Numpad8", 
+  "KeyW"
 ], ResponsiveGamepad.RESPONSIVE_GAMEPAD_INPUTS.DPAD_UP);
