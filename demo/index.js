@@ -1,9 +1,42 @@
+import { h, render, Component } from 'preact';
 import {ResponsiveGamepad} from '../dist/responsive-gamepad.esm';
 
-ResponsiveGamepad.enable();
+import ResponsiveGamepadState from './state';
+
+import './index.css';
 
 ResponsiveGamepad.onInputsChange('DPAD_UP', state => {
   console.log('demo: DPAD_UP!', state.DPAD_UP);
-})
+  console.log('demo: state', state);
+});
 
-console.log('demo');
+class ResponsiveGamepadDemo extends Component {
+  componentDidMount() {
+    ResponsiveGamepad.enable();
+  }
+
+  render() {
+    return (
+      <div>
+
+        <h1>Responsive Gamepad Demo</h1>
+        <a href="https://github.com/torch2424/responsive-gamepad" target="_blank">Fork me on Github</a>
+
+        <div class="description">
+          This is the example demo for responsive-gamepad.
+          Feel free to test this demo with:
+          <ul>
+            <li>Keyboard</li>
+            <li>Gamepad (Feel free to plug one into USB)</li>
+            <li>Touchpad (See the floating fixed element at the bottom of the screen)</li>
+          </ul>
+          Please scroll down to see the different features and examples the API provides.
+        </div>
+
+        <ResponsiveGamepadState />
+      </div>
+    )
+  }
+}
+
+render(<ResponsiveGamepadDemo />, document.getElementById('root'));

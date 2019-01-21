@@ -56,11 +56,15 @@
     "gh-pages": "^2.0.1",
     "np": "^3.1.0",
     "npm-run-all": "^4.1.5",
+    "postcss-import": "^12.0.1",
+    "preact": "^8.4.2",
     "rollup": "^1.1.0",
     "rollup-plugin-babel": "^4.3.0",
     "rollup-plugin-bundle-size": "^1.0.2",
     "rollup-plugin-commonjs": "^9.2.0",
     "rollup-plugin-node-resolve": "^4.0.0",
-    "rollup-plugin-serve": "^1.0.0"
+    "rollup-plugin-postcss": "^1.6.3",
+    "rollup-plugin-serve": "^1.0.0",
+    "sakura.css": "^1.0.0"
   }
 }

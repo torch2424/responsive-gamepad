@@ -3,6 +3,8 @@ import commonjs from 'rollup-plugin-commonjs';
 import babel from 'rollup-plugin-babel';
 import serve from 'rollup-plugin-serve';
 import bundleSize from 'rollup-plugin-bundle-size';
+import postcss from 'rollup-plugin-postcss';
+import postcssImport from 'postcss-import';
 import pkg from './package.json';
 
 const fs = require('fs');
@@ -27,9 +29,13 @@ const babelPluginConfig = {
 };
 
 let plugins = [
-  resolve(), // so Rollup can find node modules
-  commonjs(), // so Rollup can convert node module to an ES module
+  postcss({
+    extensions: ['.css'],
+    plugins: [postcssImport()]
+  }),
   babel(babelPluginConfig),
+  resolve(),
+  commonjs()
 ];
 
 if (process.env.ROLLUP_WATCH) {

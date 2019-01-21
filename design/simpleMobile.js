@@ -10,7 +10,7 @@ ResponsiveGamepad.enable();
 // Buttons
 // Analogs
 
-const removeDpadFunction = ResponsiveGamepad.TouchInput.addDpad(document.querySelector('#dpad'));
+const removeDpadFunction = ResponsiveGamepad.TouchInput.addDpadInput(document.querySelector('#dpad'));
 const removeLeftAnalgoFunction = ResponsiveGamepad.TouchInput.addLeftAnalogInput(document.querySelector('#left-analog'));
 const removeRightAnalgoFunction = ResponsiveGamepad.TouchInput.addRightAnalogInput(document.querySelector('#right-analog'));
 const removeButtonFunction = ResponsiveGamepad.TouchInput.addButtonInput(
