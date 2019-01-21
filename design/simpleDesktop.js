@@ -4,7 +4,7 @@ import ResponsiveGamepad from 'responsive-gamepad';
 
 ResponsiveGamepad.enable();
 
-ResponsiveGamepad.setInterval(ResponsiveGamepadState => {
+const stopIntervalFunction = ResponsiveGamepad.setInterval(ResponsiveGamepadState => {
   // Do Stuff
 }, 16);
 
