@@ -161,19 +161,6 @@ class Keyboard extends InputSource {
     this.keymap[responsiveGamepadInput].keys = codes;
   }
 
-  _updateKeymapValues(event) {
-    // Check if we should be ignoring the event
-    if (this.ignoreWhenInputElementFocused && this._isFocusedOnInputElement()) {
-      return;
-    }
-
-    if (this.ignoreOnModifierState && this._isInModifierState(event)) {
-      return;
-    }
-
-    event.preventDefault();
-  }
-
   _isFocusedOnInputElement() {
     return INPUT_HTML_TAGS.some(htmlTag => {
       if (document.activeElement && document.activeElement.tagName.toLowerCase() === htmlTag.toLowerCase()) {
@@ -186,6 +173,35 @@ class Keyboard extends InputSource {
 
   _isInModifierState(event) {
     return MODIFIER_KEYS.some(key => event.getModifierState(key) || event.code === key);
+  }
+
+  _updateKeymapValues(event) {
+    // Check if we should be ignoring the event
+    if (this.ignoreWhenInputElementFocused && this._isFocusedOnInputElement()) {
+      return;
+    }
+
+    if (this.ignoreOnModifierState && this._isInModifierState(event)) {
+      return;
+    }
+
+    event.preventDefault(); // Update the keymap accordingly to the key event
+
+    Object.keys(this.keymap).some(key => {
+      return key.keys.some(code => {
+        if (code === event.code) {
+          if (event.type === 'keydown') {
+            this.keymap[key].value = true;
+          } else {
+            this.keymap[key].value = false;
+          }
+
+          return true;
+        }
+
+        return false;
+      });
+    });
   }
 
 }
