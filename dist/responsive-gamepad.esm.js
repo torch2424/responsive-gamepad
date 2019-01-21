@@ -1,33 +1,3 @@
-const RESPONSIVE_GAMEPAD_INPUTS = {
-  DPAD_UP: 'DPAD_UP',
-  DPAD_RIGHT: 'DPAD_RIGHT',
-  DPAD_DOWN: 'DPAD_DOWN',
-  DPAD_LEFT: 'DPAD_LEFT',
-  LEFT_ANALOG_HORIZONTAL_AXIS: 'LEFT_ANALOG_HORIZONTAL_AXIS',
-  LEFT_ANALOG_VERTICAL_AXIS: 'LEFT_ANALOG_VERTICAL_AXIS',
-  LEFT_ANALOG_UP: 'LEFT_ANALOG_UP',
-  LEFT_ANALOG_RIGHT: 'LEFT_ANALOG_RIGHT',
-  LEFT_ANALOG_DOWN: 'LEFT_ANALOG_DOWN',
-  LEFT_ANALOG_LEFT: 'LEFT_ANALOG_LEFT',
-  RIGHT_ANALOG_HORIZONTAL_AXIS: 'RIGHT_ANALOG_HORIZONTAL_AXIS',
-  RIGHT_ANALOG_VERTICAL_AXIS: 'RIGHT_ANALOG_VERTICAL_AXIS',
-  RIGHT_ANALOG_UP: 'RIGHT_ANALOG_UP',
-  RIGHT_ANALOG_RIGHT: 'RIGHT_ANALOG_RIGHT',
-  RIGHT_ANALOG_DOWN: 'RIGHT_ANALOG_DOWN',
-  RIGHT_ANALOG_LEFT: 'RIGHT_ANALOG_LEFT',
-  A: 'A',
-  B: 'B',
-  X: 'X',
-  Y: 'Y',
-  LEFT_TRIGGER: 'LEFT_TRIGGER',
-  LEFT_BUMPER: 'LEFT_BUMPER',
-  RIGHT_TRIGGER: 'RIGHT_TRIGGER',
-  RIGHT_BUMPER: 'RIGHT_BUMPER',
-  SELECT: 'SELECT',
-  START: 'START',
-  SPECIAL: 'SPECIAL'
-};
-
 function _defineProperty(obj, key, value) {
   if (key in obj) {
     Object.defineProperty(obj, key, {
@@ -61,6 +31,36 @@ function _objectSpread(target) {
 
   return target;
 }
+
+const RESPONSIVE_GAMEPAD_INPUTS = {
+  DPAD_UP: 'DPAD_UP',
+  DPAD_RIGHT: 'DPAD_RIGHT',
+  DPAD_DOWN: 'DPAD_DOWN',
+  DPAD_LEFT: 'DPAD_LEFT',
+  LEFT_ANALOG_HORIZONTAL_AXIS: 'LEFT_ANALOG_HORIZONTAL_AXIS',
+  LEFT_ANALOG_VERTICAL_AXIS: 'LEFT_ANALOG_VERTICAL_AXIS',
+  LEFT_ANALOG_UP: 'LEFT_ANALOG_UP',
+  LEFT_ANALOG_RIGHT: 'LEFT_ANALOG_RIGHT',
+  LEFT_ANALOG_DOWN: 'LEFT_ANALOG_DOWN',
+  LEFT_ANALOG_LEFT: 'LEFT_ANALOG_LEFT',
+  RIGHT_ANALOG_HORIZONTAL_AXIS: 'RIGHT_ANALOG_HORIZONTAL_AXIS',
+  RIGHT_ANALOG_VERTICAL_AXIS: 'RIGHT_ANALOG_VERTICAL_AXIS',
+  RIGHT_ANALOG_UP: 'RIGHT_ANALOG_UP',
+  RIGHT_ANALOG_RIGHT: 'RIGHT_ANALOG_RIGHT',
+  RIGHT_ANALOG_DOWN: 'RIGHT_ANALOG_DOWN',
+  RIGHT_ANALOG_LEFT: 'RIGHT_ANALOG_LEFT',
+  A: 'A',
+  B: 'B',
+  X: 'X',
+  Y: 'Y',
+  LEFT_TRIGGER: 'LEFT_TRIGGER',
+  LEFT_BUMPER: 'LEFT_BUMPER',
+  RIGHT_TRIGGER: 'RIGHT_TRIGGER',
+  RIGHT_BUMPER: 'RIGHT_BUMPER',
+  SELECT: 'SELECT',
+  START: 'START',
+  SPECIAL: 'SPECIAL'
+};
 
 // Base Class for all input sources
 class InputSource {
@@ -256,7 +256,9 @@ class ResponsiveGamepadService {
     this._multipleDirectionInput = true; // Our Input Sources
 
     this.Keyboard = new Keyboard();
-    setDefaultKeymap(this); // On Input Change
+    setDefaultKeymap(this); // Our Plugins
+
+    this.plugins = []; // On Input Change
 
     this.inputChangeMap = {};
     this.inputChangeOldState = undefined;
@@ -298,11 +300,38 @@ class ResponsiveGamepadService {
     this._multipleDirectionInput = false;
   }
 
-  getState() {
-    const keyboardState = this.Keyboard.getState(); // TODO: Handle Multiple Directions
-    // TODO: Handle Plugins
+  addPlugin(pluginObject) {
+    this.plugins.push(pluginObject);
 
-    return keyboardState;
+    if (pluginObject.onAddPlugin) {
+      pluginObject.onAddPlugin();
+    }
+
+    return () => {
+      if (pluginObject.onRemovePlugin) {
+        pluginObject.onRemovePlugin();
+      }
+
+      this.plugins.splice(this.plugins.indexOf(pluginObject), 1);
+    };
+  }
+
+  getState() {
+    let state = _objectSpread({}, RESPONSIVE_GAMEPAD_INPUTS);
+
+    const keyboardState = this.Keyboard.getState();
+    state = keyboardState; // TODO: Handle Multiple Directions
+
+    this.plugins.forEach(plugin => {
+      if (plugin.onGetState) {
+        const response = plugin.onGetState(this.state);
+
+        if (response) {
+          this.state = response;
+        }
+      }
+    });
+    return state;
   }
 
   onInputsChange(codes, callback) {
