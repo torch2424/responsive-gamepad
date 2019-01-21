@@ -7,11 +7,12 @@ const removePlugin = ResponsiveGamepad.addPlugin(ResponsiveGamepadPluginExample(
 
 ResponsiveGamepad.enable();
 
-const stopIntervalFunction = ResponsiveGamepad.setInterval(ResponsiveGamepadState => {
-  // State will be modified here
-  // Could have extra inputs, 
-  // or inputs merged together, 
-  // Some hacked together support for another input source,
-  // etc...
-}, 16);
+// State will be modified from getState()
+// Could have extra inputs, 
+// or inputs merged together, 
+// Some hacked together support for another input source,
+// etc...
+const myGameLoop = () => {
+  const state = ResponsiveGamepad.getState();
+};
 

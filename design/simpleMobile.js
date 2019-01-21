@@ -18,7 +18,8 @@ const removeButtonFunction = ResponsiveGamepad.TouchInput.addButtonInput(
   ResponsiveGamepad.RESPONSIVE_GAMEPAD_INPUTS.A
 );
 
-const stopIntervalFunction = ResponsiveGamepad.setInterval(ResponsiveGamepadState => {
-  // Do Stuff
-}, 16);
+const myGameLoop = () => {
+  const state = ResponsiveGamepad.getState();
+};
+
 
