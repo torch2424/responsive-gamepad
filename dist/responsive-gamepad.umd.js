@@ -88,7 +88,10 @@
 
   // https://www.w3schools.com/tags/ref_byfunc.asp
 
-  const INPUT_HTML_TAGS = ['input', 'textarea', 'button', 'select', 'option', 'optgroup', 'label', 'datalist'];
+  const INPUT_HTML_TAGS = ['input', 'textarea', 'button', 'select', 'option', 'optgroup', 'label', 'datalist']; // Modified Keys Ignored
+  // https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/getModifierState
+
+  const MODIFIER_KEYS = ["Alt", "Control", "Meta", "OS"];
   class Keyboard extends InputSource {
     constructor() {
       super(); // Create our keymap to our inputs
@@ -102,7 +105,9 @@
       }); // Some settings pertaining to the keyboard
 
       this.enableIgnoreWhenInputElementFocused();
-      this.enableIgnoreSpecialKeyCombinations();
+      this.enableIgnoreWhenModifierState(); // Our bound updateFunction
+
+      this._boundUpdateKeymapValues = this._updateKeymapValues.bind(this);
     }
 
     enable() {
@@ -111,8 +116,8 @@
         return;
       }
 
-      window.addEventListener('keyup', this._updateKeymapValues);
-      window.addEventListener('keydown', this._updateKeymapValues);
+      window.addEventListener('keyup', this._boundUpdateKeymapValues);
+      window.addEventListener('keydown', this._boundUpdateKeymapValues);
     }
 
     disable() {
@@ -121,8 +126,8 @@
         return;
       }
 
-      window.removeEventListener('keyup', this._updateKeymapValues);
-      window.removeEventListener('keydown', this._updateKeymapValues);
+      window.removeEventListener('keyup', this._boundUpdateKeymapValues);
+      window.removeEventListener('keydown', this._boundUpdateKeymapValues);
     }
 
     getState() {
@@ -142,12 +147,12 @@
       this.ignoreWhenInputElementFocused = false;
     }
 
-    enableIgnoreSpecialKeyCombinations() {
-      this.ignoreSpecialKeyCombinations = true;
+    enableIgnoreWhenModifierState() {
+      this.ignoreOnModifierState = true;
     }
 
-    disableIgnoreSpecialKeyCombinations() {
-      this.ignoreSpecialKeyCombinations = false;
+    disableIgnoreWhenModifierState() {
+      this.ignoreOnModifierState = false;
     }
 
     setKeysToResponsiveGamepadInput(codes, responsiveGamepadInput) {
@@ -168,7 +173,11 @@
         return;
       }
 
-      console.log(event);
+      if (this.ignoreOnModifierState && this._isInModifierState(event)) {
+        return;
+      }
+
+      event.preventDefault();
     }
 
     _isFocusedOnInputElement() {
@@ -179,6 +188,10 @@
 
         return false;
       });
+    }
+
+    _isInModifierState(event) {
+      return MODIFIER_KEYS.some(key => event.getModifierState(key) || event.code === key);
     }
 
   }
@@ -230,6 +243,14 @@
       console.log('constructor');
       this.Keyboard = new Keyboard();
       setDefaultKeymap(this);
+    }
+
+    enable() {
+      this.Keyboard.enable();
+    }
+
+    disable() {
+      this.Keyboard.disable();
     }
 
   }

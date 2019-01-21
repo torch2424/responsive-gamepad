@@ -4,5 +4,6 @@ import ResponsiveGamepad from 'responsive-gamepad';
 
 ResponsiveGamepad.enable();
 
-RepsonsiveGamepad.Keyboard.enableIgnoreSpecialKeyCombinations();
-RepsonsiveGamepad.Keyboard.disableIgnoreSpecialKeyCombinations();
+// Inspired by: https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/getModifierState 
+RepsonsiveGamepad.Keyboard.enableIgnoreWhenModifierState();
+RepsonsiveGamepad.Keyboard.disableIgnoreWhenModifierState();
