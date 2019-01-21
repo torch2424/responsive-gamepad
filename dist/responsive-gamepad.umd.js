@@ -194,7 +194,7 @@
       event.preventDefault(); // Update the keymap accordingly to the key event
 
       Object.keys(this.keymap).some(key => {
-        return key.keys.some(code => {
+        return this.keymap[key].keys.some(code => {
           if (code === event.code) {
             if (event.type === 'keydown') {
               this.keymap[key].value = true;
@@ -212,46 +212,203 @@
 
   }
 
+  class Gamepad extends InputSource {
+    constructor() {
+      super();
+      this.gamepadAnalogStickDeadZone = 0.25;
+      this.keymap = {};
+    }
+
+    enable() {}
+
+    disable() {}
+
+    getState(gamepadIndex) {
+      const gamepads = getGamepads();
+
+      for (let i = 0; i < gamepads.length; i++) {
+        // Get our current gamepad
+        let gamepad = gamepads[i];
+
+        if (!gamepad) {
+          continue;
+        }
+
+        Object.keys(this.keymap).forEach(input => {
+          if (this.keymap[input].buttons) {
+            this.keymap[input].value = this.keymap[input].buttons.some(button => this._isButtonPressed(gamepad, button));
+          } else if (this.keymap[input].axes) {
+            // TODO: Truly support multiple axes by averaging.
+            let value = getAnalogStickAxis(gamepad, this.keymap[input].axes[0]);
+
+            if (Math.abs(value) > this.gamepadAnalogStickDeadZone) {
+              this.keymap[input].value = value;
+            }
+          }
+        });
+      }
+
+      const state = {};
+      Object.keys(this.keymap).forEach(input => {
+        state[input] = this.keymap[input].value;
+      });
+      return state;
+    }
+
+    _setGamepadButtonsToResponsiveGamepadInput(buttons, responsiveGamepadInput) {
+      if (!buttons || !responsiveGamepadInput || buttons.length === 0) {
+        throw new Error('Could not set the specificed buttons to input');
+      }
+
+      if (typeof buttons === 'number') {
+        buttons = [buttons];
+      }
+
+      this.keymap[responsiveGamepadInput] = {};
+      this.keymap[responsiveGamepadInput].buttons = buttons;
+    }
+
+    _setGamepadAxesToResponsiveGamepadInput(axes, responsiveGamepadInput) {
+      if (!axes || !responsiveGamepadInput || axes.length === 0) {
+        throw new Error('Could not set the specificed buttons to input');
+      }
+
+      if (typeof axes === 'number') {
+        axes = [axes];
+      }
+
+      this.keymap[responsiveGamepadInput] = {};
+      this.keymap[responsiveGamepadInput].axes = axes;
+    }
+
+    _isButtonPressed(gamepad, buttonId) {
+      return gamepad.buttons[buttonId] ? gamepad.buttons[buttonId].pressed : false;
+    }
+
+    _getGamepads() {
+      // Similar to: https://github.com/torch2424/picoDeploy/blob/master/src/assets/3pLibs/pico8gamepad/pico8gamepad.js
+      // Gampad Diagram: https://w3c.github.io/gamepad/#remapping
+      return navigator.getGamepads ? navigator.getGamepads() : [];
+    } // Similar to: https://github.com/torch2424/picoDeploy/blob/master/src/assets/3pLibs/pico8gamepad/pico8gamepad.js
+
+
+    _getAnalogStickAxis(gamepad, axisId) {
+      if (gamepad) {
+        return gamepad.axes[axisId] || 0.0;
+      }
+
+      return 0.0;
+    } // Function to convert a set of analog booleans to an Axis Number
+
+
+    _analogBooleanToAxis(positive, negative) {
+      if (positive) {
+        return 1.0;
+      }
+
+      if (negative) {
+        return -1.0;
+      }
+
+      return 0;
+    }
+
+  }
+
   // Keymaps should all be using: KeyboardEvent.code
   function setDefaultKeymap(ResponsiveGamepad) {
     // Up
     ResponsiveGamepad.Keyboard.setKeysToResponsiveGamepadInput(["ArrowUp", "Numpad8"], RESPONSIVE_GAMEPAD_INPUTS.DPAD_UP);
     ResponsiveGamepad.Keyboard.setKeysToResponsiveGamepadInput(["KeyW"], RESPONSIVE_GAMEPAD_INPUTS.LEFT_ANALOG_UP);
-    ResponsiveGamepad.Keyboard.setKeysToResponsiveGamepadInput(["KeyI"], RESPONSIVE_GAMEPAD_INPUTS.RIGHT_ANALOG_UP); //Right
+    ResponsiveGamepad.Keyboard.setKeysToResponsiveGamepadInput(["KeyI"], RESPONSIVE_GAMEPAD_INPUTS.RIGHT_ANALOG_UP);
 
-    ResponsiveGamepad.Keyboard.setKeysToResponsiveGamepadInput(["ArrowRight", "Numpad6"], RESPONSIVE_GAMEPAD_INPUTS.DPAD_UP);
-    ResponsiveGamepad.Keyboard.setKeysToResponsiveGamepadInput(["KeyD"], RESPONSIVE_GAMEPAD_INPUTS.LEFT_ANALOG_UP);
-    ResponsiveGamepad.Keyboard.setKeysToResponsiveGamepadInput(["KeyL"], RESPONSIVE_GAMEPAD_INPUTS.RIGHT_ANALOG_UP); // Down
+    ResponsiveGamepad.Gamepad._setGamepadButtonsToResponsiveGamepadInput([12], RESPONSIVE_GAMEPAD_INPUTS.DPAD_UP); //Right
 
-    ResponsiveGamepad.Keyboard.setKeysToResponsiveGamepadInput(["ArrowDown", "Numpad5", "Numpad2"], RESPONSIVE_GAMEPAD_INPUTS.DPAD_UP);
-    ResponsiveGamepad.Keyboard.setKeysToResponsiveGamepadInput(["KeyS"], RESPONSIVE_GAMEPAD_INPUTS.LEFT_ANALOG_UP);
-    ResponsiveGamepad.Keyboard.setKeysToResponsiveGamepadInput(["KeyK"], RESPONSIVE_GAMEPAD_INPUTS.RIGHT_ANALOG_UP); // Left
 
-    ResponsiveGamepad.Keyboard.setKeysToResponsiveGamepadInput(["ArrowLeft", "Numpad4"], RESPONSIVE_GAMEPAD_INPUTS.DPAD_UP);
-    ResponsiveGamepad.Keyboard.setKeysToResponsiveGamepadInput(["KeyA"], RESPONSIVE_GAMEPAD_INPUTS.LEFT_ANALOG_UP);
-    ResponsiveGamepad.Keyboard.setKeysToResponsiveGamepadInput(["KeyJ"], RESPONSIVE_GAMEPAD_INPUTS.RIGHT_ANALOG_UP); // A
+    ResponsiveGamepad.Keyboard.setKeysToResponsiveGamepadInput(["ArrowRight", "Numpad6"], RESPONSIVE_GAMEPAD_INPUTS.DPAD_RIGHT);
+    ResponsiveGamepad.Keyboard.setKeysToResponsiveGamepadInput(["KeyD"], RESPONSIVE_GAMEPAD_INPUTS.LEFT_ANALOG_RIGHT);
+    ResponsiveGamepad.Keyboard.setKeysToResponsiveGamepadInput(["KeyL"], RESPONSIVE_GAMEPAD_INPUTS.RIGHT_ANALOG_RIGHT);
 
-    ResponsiveGamepad.Keyboard.setKeysToResponsiveGamepadInput(["KeyX", "Semicolon", "Numpad7"], RESPONSIVE_GAMEPAD_INPUTS.A); // B
+    ResponsiveGamepad.Gamepad._setGamepadButtonsToResponsiveGamepadInput([15], RESPONSIVE_GAMEPAD_INPUTS.DPAD_RIGHT); // Down
 
-    ResponsiveGamepad.Keyboard.setKeysToResponsiveGamepadInput(["KeyZ", "Escape", "Quote", "Backspace", "Numpad9"], RESPONSIVE_GAMEPAD_INPUTS.B); // X
 
-    ResponsiveGamepad.Keyboard.setKeysToResponsiveGamepadInput(["KeyC"], RESPONSIVE_GAMEPAD_INPUTS.X); // Y
+    ResponsiveGamepad.Keyboard.setKeysToResponsiveGamepadInput(["ArrowDown", "Numpad5", "Numpad2"], RESPONSIVE_GAMEPAD_INPUTS.DPAD_DOWN);
+    ResponsiveGamepad.Keyboard.setKeysToResponsiveGamepadInput(["KeyS"], RESPONSIVE_GAMEPAD_INPUTS.LEFT_ANALOG_DOWN);
+    ResponsiveGamepad.Keyboard.setKeysToResponsiveGamepadInput(["KeyK"], RESPONSIVE_GAMEPAD_INPUTS.RIGHT_ANALOG_DOWN);
 
-    ResponsiveGamepad.Keyboard.setKeysToResponsiveGamepadInput(["KeyV"], RESPONSIVE_GAMEPAD_INPUTS.Y); // Left Trigger
+    ResponsiveGamepad.Gamepad._setGamepadButtonsToResponsiveGamepadInput([13], RESPONSIVE_GAMEPAD_INPUTS.DPAD_DOWN); // Left
 
-    ResponsiveGamepad.Keyboard.setKeysToResponsiveGamepadInput(["KeyQ"], RESPONSIVE_GAMEPAD_INPUTS.LEFT_TRIGGER); // Left Bumper
 
-    ResponsiveGamepad.Keyboard.setKeysToResponsiveGamepadInput(["KeyE"], RESPONSIVE_GAMEPAD_INPUTS.LEFT_BUMPER); // Right Trigger
+    ResponsiveGamepad.Keyboard.setKeysToResponsiveGamepadInput(["ArrowLeft", "Numpad4"], RESPONSIVE_GAMEPAD_INPUTS.DPAD_LEFT);
+    ResponsiveGamepad.Keyboard.setKeysToResponsiveGamepadInput(["KeyA"], RESPONSIVE_GAMEPAD_INPUTS.LEFT_ANALOG_LEFT);
+    ResponsiveGamepad.Keyboard.setKeysToResponsiveGamepadInput(["KeyJ"], RESPONSIVE_GAMEPAD_INPUTS.RIGHT_ANALOG_LEFT);
 
-    ResponsiveGamepad.Keyboard.setKeysToResponsiveGamepadInput(["KeyU"], RESPONSIVE_GAMEPAD_INPUTS.RIGHT_TRIGGER); // Right Bumper
+    ResponsiveGamepad.Gamepad._setGamepadButtonsToResponsiveGamepadInput([14], RESPONSIVE_GAMEPAD_INPUTS.DPAD_LEFT); // Left Analog Axis
 
-    ResponsiveGamepad.Keyboard.setKeysToResponsiveGamepadInput(["KeyO"], RESPONSIVE_GAMEPAD_INPUTS.RIGHT_BUMPER); // Start
 
-    ResponsiveGamepad.Keyboard.setKeysToResponsiveGamepadInput(["Enter", "Numpad3"], RESPONSIVE_GAMEPAD_INPUTS.START); // Select
+    ResponsiveGamepad.Gamepad._setGamepadAxesToResponsiveGamepadInput([0], RESPONSIVE_GAMEPAD_INPUTS.LEFT_ANALOG_HORIZONTAL_AXIS);
 
-    ResponsiveGamepad.Keyboard.setKeysToResponsiveGamepadInput(["ShiftRight", "ShiftLeft", "Tab", "Numpad1"], RESPONSIVE_GAMEPAD_INPUTS.SELECT); // Special
+    ResponsiveGamepad.Gamepad._setGamepadAxesToResponsiveGamepadInput([1], RESPONSIVE_GAMEPAD_INPUTS.LEFT_ANALOG_VERTICAL_AXIS); // Right Analog Axis
+
+
+    ResponsiveGamepad.Gamepad._setGamepadAxesToResponsiveGamepadInput([2], RESPONSIVE_GAMEPAD_INPUTS.RIGHT_ANALOG_HORIZONTAL_AXIS);
+
+    ResponsiveGamepad.Gamepad._setGamepadAxesToResponsiveGamepadInput([3], RESPONSIVE_GAMEPAD_INPUTS.RIGHT_ANALOG_VERTICAL_AXIS); // A
+
+
+    ResponsiveGamepad.Keyboard.setKeysToResponsiveGamepadInput(["KeyX", "Semicolon", "Numpad7"], RESPONSIVE_GAMEPAD_INPUTS.A);
+
+    ResponsiveGamepad.Gamepad._setGamepadButtonsToResponsiveGamepadInput([0], RESPONSIVE_GAMEPAD_INPUTS.A); // B
+
+
+    ResponsiveGamepad.Keyboard.setKeysToResponsiveGamepadInput(["KeyZ", "Escape", "Quote", "Backspace", "Numpad9"], RESPONSIVE_GAMEPAD_INPUTS.B);
+
+    ResponsiveGamepad.Gamepad._setGamepadButtonsToResponsiveGamepadInput([1], RESPONSIVE_GAMEPAD_INPUTS.B); // X
+
+
+    ResponsiveGamepad.Keyboard.setKeysToResponsiveGamepadInput(["KeyC"], RESPONSIVE_GAMEPAD_INPUTS.X);
+
+    ResponsiveGamepad.Gamepad._setGamepadButtonsToResponsiveGamepadInput([2], RESPONSIVE_GAMEPAD_INPUTS.X); // Y
+
+
+    ResponsiveGamepad.Keyboard.setKeysToResponsiveGamepadInput(["KeyV"], RESPONSIVE_GAMEPAD_INPUTS.Y);
+
+    ResponsiveGamepad.Gamepad._setGamepadButtonsToResponsiveGamepadInput([3], RESPONSIVE_GAMEPAD_INPUTS.Y); // Left Trigger
+
+
+    ResponsiveGamepad.Keyboard.setKeysToResponsiveGamepadInput(["KeyQ"], RESPONSIVE_GAMEPAD_INPUTS.LEFT_TRIGGER);
+
+    ResponsiveGamepad.Gamepad._setGamepadButtonsToResponsiveGamepadInput([6], RESPONSIVE_GAMEPAD_INPUTS.LEFT_TRIGGER); // Left Bumper
+
+
+    ResponsiveGamepad.Keyboard.setKeysToResponsiveGamepadInput(["KeyE"], RESPONSIVE_GAMEPAD_INPUTS.LEFT_BUMPER);
+
+    ResponsiveGamepad.Gamepad._setGamepadButtonsToResponsiveGamepadInput([4], RESPONSIVE_GAMEPAD_INPUTS.LEFT_BUMPER); // Right Trigger
+
+
+    ResponsiveGamepad.Keyboard.setKeysToResponsiveGamepadInput(["KeyU"], RESPONSIVE_GAMEPAD_INPUTS.RIGHT_TRIGGER);
+
+    ResponsiveGamepad.Gamepad._setGamepadButtonsToResponsiveGamepadInput([7], RESPONSIVE_GAMEPAD_INPUTS.RIGHT_BUMPER); // Right Bumper
+
+
+    ResponsiveGamepad.Keyboard.setKeysToResponsiveGamepadInput(["KeyO"], RESPONSIVE_GAMEPAD_INPUTS.RIGHT_BUMPER);
+
+    ResponsiveGamepad.Gamepad._setGamepadButtonsToResponsiveGamepadInput([5], RESPONSIVE_GAMEPAD_INPUTS.RIGHT_BUMPER); // Start
+
+
+    ResponsiveGamepad.Keyboard.setKeysToResponsiveGamepadInput(["Enter", "Numpad3"], RESPONSIVE_GAMEPAD_INPUTS.START);
+
+    ResponsiveGamepad.Gamepad._setGamepadButtonsToResponsiveGamepadInput([9], RESPONSIVE_GAMEPAD_INPUTS.START); // Select
+
+
+    ResponsiveGamepad.Keyboard.setKeysToResponsiveGamepadInput(["ShiftRight", "ShiftLeft", "Tab", "Numpad1"], RESPONSIVE_GAMEPAD_INPUTS.SELECT);
+
+    ResponsiveGamepad.Gamepad._setGamepadButtonsToResponsiveGamepadInput([8], RESPONSIVE_GAMEPAD_INPUTS.SELECT); // Special
+
 
     ResponsiveGamepad.Keyboard.setKeysToResponsiveGamepadInput(["Space", "Backslash", "Backquote"], RESPONSIVE_GAMEPAD_INPUTS.SPECIAL);
+
+    ResponsiveGamepad.Gamepad._setGamepadButtonsToResponsiveGamepadInput([16], RESPONSIVE_GAMEPAD_INPUTS.SPECIAL);
   }
 
   class ResponsiveGamepadService {
@@ -262,12 +419,13 @@
       this._multipleDirectionInput = true; // Our Input Sources
 
       this.Keyboard = new Keyboard();
+      this.Gamepad = new Gamepad();
       setDefaultKeymap(this); // Our Plugins
 
       this.plugins = []; // On Input Change
 
       this.inputChangeMap = {};
-      this.inputChangeOldState = undefined;
+      this.inputChangeOldState = {};
       this.cancelInputChangeListener = undefined;
     }
 
@@ -275,7 +433,7 @@
       // Enable Input Sources
       this.Keyboard.enable();
 
-      if (Object.keys(inputChangeMap).length > 0) {
+      if (Object.keys(this.inputChangeMap).length > 0) {
         this._startInputChangeInterval();
       }
 
