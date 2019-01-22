@@ -28,6 +28,10 @@
   fill: #FAFAFA;
 }
 
+.touchpad .active {
+  fill: #3ba184;
+}
+
 .touchpad svg text {
   font-size: 6px
 }
