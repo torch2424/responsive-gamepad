@@ -15,6 +15,23 @@ Handle Keyboard, Gamepad, and Touch Controls in the browser under a single API.
 
 # Table Of Contents
 
+* [Quick Start](#quick-start)
+* [Projects Using responsive-gamepad](#projects-using-responsive-gamepad)
+* [Instalation](#instalation)
+* [API](#api)
+  * [ResponsiveGamepad](#responsivegamepad)
+    * [Keyboard](#keyboard)
+    * [Gamepad](#gamepad)
+    * [TouchInput](#touchinput)
+* [Input Map](#input-map)
+* [Plugins](#plugins)
+  * [How to build plugins](#how-to-build-plugins)
+  * [Featured Plugins](#featured-plugins)
+* [Contributing](#contributing)
+  * [Installation](#installation)
+  * [CLI Commands / Npm Scripts](#cli-commands--npm-scripts)
+* [LICENSE](#license)
+* [Other Notes](#other-notes)
 
 # Quick Start
 
@@ -28,7 +45,7 @@ This is a quick **Tl;DR** on installing and using responsive-gamepad:
 
 4. `ResponsiveGamepad.getState();`
 
-Please see the [Input Map](#inputmap) section for what Responsive Gamepad Keys represent on a "Standard" Controller.
+Please see the [Input Map](#input-map) section for what Responsive Gamepad Keys represent on a "Standard" Controller.
 
 # Projects Using `responsive-gamepad`
 
@@ -42,7 +59,7 @@ Please see the [Input Map](#inputmap) section for what Responsive Gamepad Keys r
 
 # API
 
-*Additional information/exports concerning  can be found in the [Input Map](#inputmap) section.*
+*Additional information/exports concerning  can be found in the [Input Map](#input-map) section.*
 
 *For user journeys, and common How-To use cases, see the [design](./design) directory*
 
