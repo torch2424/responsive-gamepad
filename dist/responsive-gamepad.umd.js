@@ -116,7 +116,7 @@
     ResponsiveGamepad.Gamepad.setGamepadButtonsToResponsiveGamepadInput([4], RESPONSIVE_GAMEPAD_INPUTS.LEFT_BUMPER); // Right Trigger
 
     ResponsiveGamepad.Keyboard.setKeysToResponsiveGamepadInput(["KeyU"], RESPONSIVE_GAMEPAD_INPUTS.RIGHT_TRIGGER);
-    ResponsiveGamepad.Gamepad.setGamepadButtonsToResponsiveGamepadInput([7], RESPONSIVE_GAMEPAD_INPUTS.RIGHT_BUMPER); // Right Bumper
+    ResponsiveGamepad.Gamepad.setGamepadButtonsToResponsiveGamepadInput([7], RESPONSIVE_GAMEPAD_INPUTS.RIGHT_TRIGGER); // Right Bumper
 
     ResponsiveGamepad.Keyboard.setKeysToResponsiveGamepadInput(["KeyO"], RESPONSIVE_GAMEPAD_INPUTS.RIGHT_BUMPER);
     ResponsiveGamepad.Gamepad.setGamepadButtonsToResponsiveGamepadInput([5], RESPONSIVE_GAMEPAD_INPUTS.RIGHT_BUMPER); // Start
@@ -198,6 +198,12 @@
 
       Object.keys(this.keymap).forEach(key => {
         state[key] = this.keymap[key].value;
+      }); // Remove any remainig strings I may have
+
+      Object.keys(state).forEach(stateKey => {
+        if (typeof state[stateKey] === 'string') {
+          delete state[stateKey];
+        }
       });
       return state;
     }
@@ -287,7 +293,7 @@
     disable() {}
 
     getState(gamepadIndex) {
-      const gamepads = getGamepads();
+      const gamepads = this._getGamepads();
 
       for (let i = 0; i < gamepads.length; i++) {
         // Get our current gamepad
@@ -302,18 +308,32 @@
             this.keymap[input].value = this.keymap[input].buttons.some(button => this._isButtonPressed(gamepad, button));
           } else if (this.keymap[input].axes) {
             // TODO: Truly support multiple axes by averaging.
-            let value = getAnalogStickAxis(gamepad, this.keymap[input].axes[0]);
+            let value = this._getAnalogStickAxis(gamepad, this.keymap[input].axes[0]);
 
-            if (Math.abs(value) > this.gamepadAnalogStickDeadZone) {
-              this.keymap[input].value = value;
-            }
+            this.keymap[input].value = value;
           }
         });
       }
 
-      const state = {};
+      const state = _objectSpread({}, RESPONSIVE_GAMEPAD_INPUTS);
+
       Object.keys(this.keymap).forEach(input => {
         state[input] = this.keymap[input].value;
+      }); // Get our analog up, right, down, left
+
+      state[RESPONSIVE_GAMEPAD_INPUTS.LEFT_ANALOG_DOWN] = state.LEFT_ANALOG_VERTICAL_AXIS > this.gamepadAnalogStickDeadZone;
+      state[RESPONSIVE_GAMEPAD_INPUTS.LEFT_ANALOG_UP] = state.LEFT_ANALOG_VERTICAL_AXIS < -1 * this.gamepadAnalogStickDeadZone;
+      state[RESPONSIVE_GAMEPAD_INPUTS.LEFT_ANALOG_RIGHT] = state.LEFT_ANALOG_HORIZONTAL_AXIS > this.gamepadAnalogStickDeadZone;
+      state[RESPONSIVE_GAMEPAD_INPUTS.LEFT_ANALOG_LEFT] = state.LEFT_ANALOG_HORIZONTAL_AXIS < -1 * this.gamepadAnalogStickDeadZone;
+      state[RESPONSIVE_GAMEPAD_INPUTS.RIGHT_ANALOG_DOWN] = state.RIGHT_ANALOG_VERTICAL_AXIS > this.gamepadAnalogStickDeadZone;
+      state[RESPONSIVE_GAMEPAD_INPUTS.RIGHT_ANALOG_UP] = state.RIGHT_ANALOG_VERTICAL_AXIS < -1 * this.gamepadAnalogStickDeadZone;
+      state[RESPONSIVE_GAMEPAD_INPUTS.RIGHT_ANALOG_RIGHT] = state.RIGHT_ANALOG_HORIZONTAL_AXIS > this.gamepadAnalogStickDeadZone;
+      state[RESPONSIVE_GAMEPAD_INPUTS.RIGHT_ANALOG_LEFT] = state.RIGHT_ANALOG_HORIZONTAL_AXIS < -1 * this.gamepadAnalogStickDeadZone; // Remove any remainig strings I may have
+
+      Object.keys(state).forEach(stateKey => {
+        if (typeof state[stateKey] === 'string') {
+          delete state[stateKey];
+        }
       });
       return state;
     }
@@ -361,19 +381,6 @@
       }
 
       return 0.0;
-    } // Function to convert a set of analog booleans to an Axis Number
-
-
-    _analogBooleanToAxis(positive, negative) {
-      if (positive) {
-        return 1.0;
-      }
-
-      if (negative) {
-        return -1.0;
-      }
-
-      return 0;
     }
 
   }
@@ -451,8 +458,51 @@
     getState() {
       let state = _objectSpread({}, RESPONSIVE_GAMEPAD_INPUTS);
 
+      const gamepadState = this.Gamepad.getState();
       const keyboardState = this.Keyboard.getState();
-      state = keyboardState; // TODO: Handle Multiple Directions
+      state = _objectSpread({}, RESPONSIVE_GAMEPAD_INPUTS);
+      Object.keys(state).forEach(stateKey => {
+        state[stateKey] = gamepadState[stateKey] || keyboardState[stateKey];
+      }); // Force Axis to be a number
+
+      const Axes = ['LEFT_ANALOG_HORIZONTAL_AXIS', 'LEFT_ANALOG_VERTICAL_AXIS', 'RIGHT_ANALOG_HORIZONTAL_AXIS', 'RIGHT_ANALOG_VERTICAL_AXIS'];
+      Axes.forEach((axis, index) => {
+        // Number type is what we want
+        if (typeof state[axis] === 'number') {
+          return;
+        }
+
+        if (index === 0 || index === 2) {
+          if (state[RESPONSIVE_GAMEPAD_INPUTS.DPAD_RIGHT]) {
+            state[axis] = 1;
+          } else if (state[RESPONSIVE_GAMEPAD_INPUTS.DPAD_LEFT]) {
+            state[axis] = -1;
+          } else {
+            state[axis] = 0;
+          }
+        }
+
+        if (index === 1 || index === 3) {
+          if (state[RESPONSIVE_GAMEPAD_INPUTS.DPAD_UP]) {
+            state[axis] = 1;
+          } else if (state[RESPONSIVE_GAMEPAD_INPUTS.DPAD_DOWN]) {
+            state[axis] = -1;
+          } else {
+            state[axis] = 0;
+          }
+        }
+      }); // Add the generic Up, Down, Left, Right
+
+      state.UP = state.DPAD_UP || state.LEFT_ANALOG_UP || state.RIGHT_ANALOG_UP;
+      state.RIGHT = state.DPAD_RIGHT || state.LEFT_ANALOG_RIGHT || state.RIGHT_ANALOG_RIGHT;
+      state.DOWN = state.DPAD_DOWN || state.LEFT_ANALOG_DOWN || state.RIGHT_ANALOG_DOWN;
+      state.LEFT = state.DPAD_LEFT || state.LEFT_ANALOG_LEFT || state.RIGHT_ANALOG_LEFT; // Remove any remainig strings I may have
+
+      Object.keys(state).forEach(stateKey => {
+        if (state[stateKey] === undefined || typeof state[stateKey] === 'string') {
+          state[stateKey] = false;
+        }
+      }); // TODO: Handle Multiple Directions
 
       this.plugins.forEach(plugin => {
         if (plugin.onGetState) {
