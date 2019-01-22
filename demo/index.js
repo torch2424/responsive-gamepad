@@ -2,6 +2,7 @@ import { h, render, Component } from 'preact';
 import {ResponsiveGamepad} from '../dist/responsive-gamepad.esm';
 
 import ResponsiveGamepadState from './state';
+import Touchpad from './touchpad';
 
 import './index.css';
 
@@ -34,6 +35,10 @@ class ResponsiveGamepadDemo extends Component {
         </div>
 
         <ResponsiveGamepadState />
+        
+        <div class="touchpad-spacing" />
+
+        <Touchpad />
       </div>
     )
   }

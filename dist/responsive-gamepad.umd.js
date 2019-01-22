@@ -465,7 +465,7 @@
         state[stateKey] = gamepadState[stateKey] || keyboardState[stateKey];
       }); // Force Axis to be a number
 
-      const Axes = ['LEFT_ANALOG_HORIZONTAL_AXIS', 'LEFT_ANALOG_VERTICAL_AXIS', 'RIGHT_ANALOG_HORIZONTAL_AXIS', 'RIGHT_ANALOG_VERTICAL_AXIS'];
+      const Axes = [RESPONSIVE_GAMEPAD_INPUTS.LEFT_ANALOG_HORIZONTAL_AXIS, RESPONSIVE_GAMEPAD_INPUTS.LEFT_ANALOG_VERTICAL_AXIS, RESPONSIVE_GAMEPAD_INPUTS.RIGHT_ANALOG_HORIZONTAL_AXIS, RESPONSIVE_GAMEPAD_INPUTS.RIGHT_ANALOG_VERTICAL_AXIS];
       Axes.forEach((axis, index) => {
         // Number type is what we want
         if (typeof state[axis] === 'number') {
