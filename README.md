@@ -7,7 +7,7 @@
 ![npm version](https://img.shields.io/npm/v/responsive-gamepad.svg)
 ![GitHub](https://img.shields.io/github/license/torch2424/responsive-gamepad.svg)
 
-Handle Keyboard, Gamepad, and Touch Controls in the browser under a single API.
+Handle Keyboard, Gamepad, and Touch Controls in the browser under a single API, (< 5KB).
 
 [Demo](https://torch2424.github.io/responsive-gamepad/)
 
