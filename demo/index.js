@@ -1,18 +1,24 @@
 import { h, render, Component } from 'preact';
 import {ResponsiveGamepad} from '../dist/responsive-gamepad.esm';
 
+import ExamplePlugin from './examplePlugin';
+
 import ResponsiveGamepadState from './state';
 import Touchpad from './touchpad';
 
 import './index.css';
 
-ResponsiveGamepad.onInputsChange('DPAD_UP', state => {
-  console.log('demo: DPAD_UP!', state.DPAD_UP);
-  console.log('demo: state', state);
-});
+ResponsiveGamepad.onInputsChange(
+  ResponsiveGamepad.RESPONSIVE_GAMEPAD_INPUTS.DPAD_UP, 
+  state => {
+    console.log('demo: DPAD_UP!', state.DPAD_UP);
+    console.log('demo: state', state);
+  }
+);
 
 class ResponsiveGamepadDemo extends Component {
   componentDidMount() {
+    ResponsiveGamepad.addPlugin(ExamplePlugin());
     ResponsiveGamepad.enable();
   }
 

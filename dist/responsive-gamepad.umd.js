@@ -951,7 +951,7 @@
       });
       this.plugins.forEach(plugin => {
         if (plugin.onGetState) {
-          const response = plugin.onGetState(this.state);
+          const response = plugin.onGetState(state);
 
           if (response) {
             this.state = response;
