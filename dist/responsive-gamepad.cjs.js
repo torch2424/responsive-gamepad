@@ -309,7 +309,6 @@ class Gamepad extends InputSource {
       if (this.keymap[input].buttons) {
         this.keymap[input].value = this.keymap[input].buttons.some(button => this._isButtonPressed(gamepad, button));
       } else if (this.keymap[input].axes) {
-        // TODO: Truly support multiple axes by averaging.
         let value = this._getAnalogStickAxis(gamepad, this.keymap[input].axis);
 
         this.keymap[input].value = value;
@@ -528,8 +527,16 @@ function getDirectionalTouch(event, boundingClientRect) {
 }
 
 class TouchDpad extends TouchInputType {
-  constructor(element) {
+  constructor(element, config) {
     super(element);
+
+    if (config) {
+      this.config = config;
+    } else {
+      this.config = {
+        allowMultipleDirections: false
+      };
+    }
 
     this._resetState();
   }
@@ -570,7 +577,14 @@ class TouchDpad extends TouchInputType {
     // Reset previous DPAD State
 
 
-    this._resetState(); // Create an additonal influece for horizontal, to make it feel better
+    this._resetState(); // Check if we are allowing multiple directions
+
+
+    if (this.config.allowMultipleDirections) {
+      this.setHorizontalState(touchX);
+      this.setVerticalState(touchY);
+      return;
+    } // Create an additonal influece for horizontal, to make it feel better
 
 
     const horizontalInfluence = this.boundingClientRect.width / 8; // Determine if we are horizontal or vertical
@@ -768,8 +782,8 @@ class TouchInput extends InputSource {
     };
   }
 
-  addDpadInput(element) {
-    const touchDpad = new TouchDpad(element);
+  addDpadInput(element, config) {
+    const touchDpad = new TouchDpad(element, config);
 
     if (this.enabled) {
       touchDpad.listen();
@@ -868,14 +882,6 @@ class ResponsiveGamepadService {
     return this._enabled;
   }
 
-  enableMultipleDirectionInput() {
-    this._multipleDirectionInput = true;
-  }
-
-  disableMultipleDirectionInput() {
-    this._multipleDirectionInput = false;
-  }
-
   addPlugin(pluginObject) {
     this.plugins.push(pluginObject);
 
@@ -940,8 +946,7 @@ class ResponsiveGamepadService {
       if (state[stateKey] === undefined || typeof state[stateKey] === 'string') {
         state[stateKey] = false;
       }
-    }); // TODO: Handle Multiple Directions
-
+    });
     this.plugins.forEach(plugin => {
       if (plugin.onGetState) {
         const response = plugin.onGetState(this.state);
