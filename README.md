@@ -4,29 +4,29 @@
 [![Build Status](https://travis-ci.org/torch2424/responsive-gamepad.svg?branch=master)](https://travis-ci.org/torch2424/responsive-gamepad)
 ![npm bundle size (minified)](https://img.shields.io/bundlephobia/min/responsive-gamepad.svg)
 ![npm](https://img.shields.io/npm/dt/responsive-gamepad.svg)
+![npm version](https://img.shields.io/npm/v/responsive-gamepad.svg)
 ![GitHub](https://img.shields.io/github/license/torch2424/responsive-gamepad.svg)
-[![Buy Me A Coffee](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/torch2424)
 
-Handle Keyboard, Gamepad, and Touch Controls in the browser under a single API.
+Handle Keyboard, Gamepad, and Touch Controls in the browser under a single API, (< 5KB).
 
 [Demo](https://torch2424.github.io/responsive-gamepad/)
 
-<img src="./assets/readmeDemo.png" width="500px" />
+<img src="./assets/responsiveGamepadDemo.gif" width="500px" />
 
 # Table Of Contents
 
 * [Quick Start](#quick-start)
 * [Projects Using responsive-gamepad](#projects-using-responsive-gamepad)
 * [Instalation](#instalation)
-* [API Usage](#api-usage)
-  * [enable](#enable)
-  * [disable](#disable)
-  * [isEnabled](#isenabled)
-  * [isIgnoringKeyEvents](#isignoringkeyevents)
-  * [addTouchInput](#addtouchinput)
-  * [removeTouchInput](#removetouchinput)
-* [Keymaps](#keymaps)
-  * [Custom Keymaps](#custom-keymaps)
+* [API](#api)
+  * [ResponsiveGamepad](#responsivegamepad)
+    * [Keyboard](#keyboard)
+    * [Gamepad](#gamepad)
+    * [TouchInput](#touchinput)
+* [Input Map](#input-map)
+* [Plugins](#plugins)
+  * [How to build plugins](#how-to-build-plugins)
+  * [Featured Plugins](#featured-plugins)
 * [Contributing](#contributing)
   * [Installation](#installation)
   * [CLI Commands / Npm Scripts](#cli-commands--npm-scripts)
@@ -45,7 +45,7 @@ This is a quick **Tl;DR** on installing and using responsive-gamepad:
 
 4. `ResponsiveGamepad.getState();`
 
-Please see the [Keymaps](#keymaps) section for what Responsive Gamepad Keys represent on a "Standard" Controller.
+Please see the [Input Map](#input-map) section for what Responsive Gamepad Keys represent on a "Standard" Controller.
 
 # Projects Using `responsive-gamepad`
 
@@ -53,131 +53,133 @@ Please see the [Keymaps](#keymaps) section for what Responsive Gamepad Keys repr
 
 # Instalation
 
-*See the [index.js](./index.js) at the root of the project, for a proper usage, and touch input example*
+*See the [demo/index.js](./demo/index.js), for a proper usage, and touch input example*
 
 `npm install --save responsive-gamepad`
 
-# API Usage
+# API
 
-*Additional information/exports concerning Keymaps can be found in the [Keymaps](#keymaps) section.*
+*Additional information/exports concerning  can be found in the [Input Map](#input-map) section.*
+
+*For user journeys, and common How-To use cases, see the [design](./design) directory*
 
 First, import the `ResponsiveGamepad` singleton service with:
 
-`import {ResponsiveGamepad} from 'responsive-gamepad'`
+`import ResponsiveGamepad from 'responsive-gamepad'`
 
-### enable
+## ResponsiveGamepad
 
-`ResponsiveGamepad.enable(optionalKeymap)`
+*Properties accessed from: `ResponsiveGamepad`.*
 
-Function to enable the gamepad, and start listening for changes.
+* `getVersion()`: string - Returns the current version of the lib.
 
-**Params**
+* `enable()`: void - Enables `ResponsiveGamepad`, and listens for events.
 
-* optionalKeymap: An option keymap that can be applied to the listener. See the [keymap](#keymap) section.
+* `disable()`: void - Removes all listeners from ResponsiveGamepad, and stops listening.
 
-### disable
+* `isEnabled()`: boolean - Returns if `ResponsiveGamepad` is currently enabled.
 
-`ResponsiveGamepad.disable()`
+* `addPlugin(myPlugin)`: function - Adds a plugin to be used with the lib. Returns a function to remove the added plugin.
 
-Function to disable the gamepad, and stop listening for changes.
+* `getState()`: ResponsiveGamepadState - Returns an object with the current state of ResponsiveGamepad. See the [Demo](https://torch2424.github.io/responsive-gamepad/) and the [Input Map](#input-map). 
 
-### isEnabled
+* `onInputsChange(ArrayOfResponsiveGamepadInputs, callback)`: function - Function to listen for changes on the array of specified `ResponsiveGamepad.RESPONSIVE_GAMEPAD_INPUTS`, and calls a callback whenever they change. Returns a function to stop listening.
 
-`ResponsiveGamepad.isEnabled()`
+### Keyboard
 
-Function to return if the `ResponsiveGamepad` service is currently enabled.
+*Properties accessed from: `ResponsiveGamepad.Keyboard`.*
 
-**Returns**
+* `enableIgnoreWhenInputElementFocused()`: void - Enables ignoring ResponsiveGamepad Keyboard input when focused on form input type elements. Enabled by default.
 
-Boolean.
+* `disableIgnoreWhenInputElementFocused()`: void - Disables the above.
 
-### isIgnoringKeyEvents
+* `enableIgnoreWhenModifierState()`: void - Enables ignoring ResponsiveGamepad Keyboard input when a [Modifier](./lib/keyboard/keyboard.js) key is pressed. See [KeyboardEvent.getModifierState()](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/getModifierState) for more reference. Enabled by default.
 
-`ResponsiveGamepad.isIgnoringKeyEvents()`
+* `disableIgnoreWhenModifierState()`: void - Disables the above.
 
-Function to return if the `ResponsiveGamepad` service is currently ignoring keyboard events, since we are focused on an input element.
+* `setKeysToResponsiveGamepadInput(ArrayOfKeyboardEventCodes, ResponsiveGamepadInput)`: void - Function used for modifying the input map. Takes and array of [KeyboardEvent.code](https://www.w3.org/TR/uievents-code/#code-value-tables) and a single [`ResponsiveGamepad.RESPONSIVE_GAMEPAD_INPUTS`](./lib/constants).
 
-**Returns**
+### Gamepad
 
-Boolean.
+*Properties accessed from: `ResponsiveGamepad.Gamepad`.*
 
-### addTouchInput
+* `getState(PlayerIndex: number)`: GamepadState - Function that takes in a player index (0, 1, 2) from the connected gamepads. Returns a `ResponsiveGamepad.getState()` like Object. Can be used for multiplayer.
 
-`ResponsiveGamepad.addTouchInputs(element, inputType, ...additionArgumentsDependingOnInputType)`
+* `setGamepadButtonsToResponsiveGamepadInput(ArrayOfGamepadButtonIds, NonAxisResponsiveGamepadInput)`: void - Function used for modifying the input map. Takes and array of [Gamepad Button Ids](https://www.w3.org/TR/gamepad/#remapping) and a single [`ResponsiveGamepad.RESPONSIVE_GAMEPAD_INPUTS`](./lib/constants).
 
-**Params**
+* `setGamepadAxisToResponsiveGamepadInput(GamepadAxisIds, AxisResponsiveGamepadInput)`: void - Function used for modifying the input map. Takes a single [Gamepad Axis Id](https://www.w3.org/TR/gamepad/#remapping) and a single [`ResponsiveGamepad.RESPONSIVE_GAMEPAD_INPUTS`](./lib/constants).
 
-* element: HTML element to represent the input
+### TouchInput
 
-* inputType: String to represent the type of input (See more below)
+*Properties accessed from: `ResponsiveGamepad.TouchInput`.*
 
-...additionArgumentsDependingOnInputType Represents any number of arguments depending on the provided inputType. See more below.
+The functions that add inputs to the `ResponsiveGamepad` have additional functionality outside of what is shown below. When inputs are added, they will have styles applied to help with them being touchable. Also, When the touch input becomes active, it will add the CSS class `active` to the element.
 
-**Returns**
+* `addButtonInput(HTMLElement, ResponsiveGamepadInput)`: void - Function that takes in a HTML Element (e.g `document.getElementById`), and a [`ResponsiveGamepad.RESPONSIVE_GAMEPAD_INPUTS`](./lib/constants). Will add the element as an interactive button for the ResponsiveGamepad.
 
-* touchInputId: String
-
-**Input Types**
-
-Input Types represent the type of touch input you would like to use. Input types can be obtained by importing `TOUCH_INPUT_TYPES`. Example:
-
-`import {ResponsiveGamepad, TOUCH_INPUT_TYPES} from 'responsive-gamepad';`
-
-As of this writing the available gamepad types are:
-
-**BUTTON**
-
-`TOUCH_INPUT_TYPES.BUTTON` - A single on/off button touch element. Must pass the additional argument of a `RESPONSIVE_GAMEPAD_KEY`. Example:
-
-`ResponsiveGamepad.addTouchInput(myHtmlElement, TOUCH_INPUT_TYPES.BUTTON, RESPONSIVE_GAMEPAD_KEYS.A);` 
-
-**DPAD**
-
-`TOUCH_INPUT_TYPES.DPAD` - A 4 direction Dpad element. Behind the Scenes, the element will be divided into 4 "touch" sections, with a central deadzone, and some bias for horizontal vs vertical. This element will automatically occupy the `RESPONSIVE_GAMEPAD.DPAD_X` keys. Example:
-
-`ResponsiveGamepad.addTouchInput(myHtmlElement, TOUCH_INPUT_TYPES.DPAD);`
-
-**ANALOG**
-
-`TOUCH_INPUT_TYPES.ANALOG` - A movable element that will use its original center and it's current position to determine an analog Axis. The element passed in should represent the "analog stick", not an element containing both the "stick" and its "background". This required the additional argument of "LEFT" vs. "RIGHT". And will occupy the `RESPONSIVE_GAMEPAD.X_ANALOG_Y` respectively. Example:
-
-`ResponsiveGamepad.addTouchInput(myHtmlElement, TOUCH_INPUT_TYPES.ANALOG, 'LEFT')`
-
-### removeTouchInput
-
-`ResponsiveGamepad.removeTouchInput(touchInputId)`
-
-Function to remove listeners from a touch input element.
-
-**Params**
-
-* `touchInputId` - The returned string from `addTouchInput()`, identifying the touch element.
-
-**Returns**
-
-Boolean. True if removed, false if not.
-
-# Keymaps
-
-Keymaps can be found under the [lib/keymaps directory](./lib/keymaps). To use a keymap, pass it in with the `.enable()` function:
+* `addDpadInput(HTMLElement, configurationObject)`: void - Function that takes in a HTML Element (e.g `document.getElementById`), and a `configurationObject`. Will add the element as an interactive dpad for the `DPAD_UP`, `DPAD_RIGHT`, `DPAD_LEFT`, and `DPAD_DOWN` inputs. The configuration object is outilined below:
 
 ```
-import {ResponsiveGamepad, KEYMAP_GAMEBOY} from 'responsive-gamepad';
-
-ResponsiveGamepad.enable(KEYMAP_GAMEBOY());
+const configurationObject = {
+  allowMultipleDirections: false // False by default. This will allow for multiple directions (diagonal) inputs.
+}
 ```
 
-The default keymap, `KEYMAP` and `KEYMAP_DEFAULT`, is based on the **"Standard"** controller. Here is a modified image from the [w3c gamepad draft](https://w3c.github.io/gamepad/#remapping) on how it correlates to the default keymap:
+* `addLeftAnalogInput(HTMLElement)`: void - Function that takes in a HTML Element (e.g `document.getElementById`). Will add the element as an interactive virtual joystick for the `LEFT_ANALOG_HORIZONTAL_AXIS`, `LEFT_ANALOG_VERTICAL_AXIS`, `LEFT_ANALOG_UP`, `LEFT_ANALOG_RIGHT`, `LEFT_ANALOG_DOWN`, `LEFT_ANALOG_LEFT` inputs.
+
+* `addRightAnalogInput(HTMLElement)`: void - Function that takes in a HTML Element (e.g `document.getElementById`). Will add the element as an interactive virtual joystick for the `RIGHT_ANALOG_HORIZONTAL_AXIS`, `RIGHT_ANALOG_VERTICAL_AXIS`, `RIGHT_ANALOG_UP`, `RIGHT_ANALOG_RIGHT`, `RIGHT_ANALOG_DOWN`, `RIGHT_ANALOG_LEFT` inputs.
+
+# Input Map
+
+The default input map is based on the **"Standard"** controller. Here is a modified image from the [w3c gamepad draft](https://w3c.github.io/gamepad/#remapping) on how it correlates to the default input map:
+
+**Note: The X in something like `INPUT_X` represents one of the many directions or axis it represents**
 
 ![Standard Controller Diagram](./assets/readmeStandardControllerLayout.jpg)
 
-* Note: The X in something like `Key_X` represents one of the many directions or axis it represents
+To see how the keyboard relates to the input map, please see the [default input map](./lib/keymap.js). The library uses [KeyBoardEvent.code](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/code) to denote all of it's keyboard keys.
 
-### Custom Keymaps
+# Plugins
 
-Custom keymaps can also be created and used! All functions used to create keymaps are exported by the lib, and are from the [`lib/schema.js`](./lib/schema.js) file. Please view how the keymaps are constructed within [`./lib/keymaps`](./lib/keymaps).
+Plugins allow for modifying the output from getState(). Which can allow for functionality like:
 
-If you think the keymap should ba a part of the library, feel free to open a PR!
+* Merging multiple inputs into one
+ 
+* Adding additional keys for something like another input source.
+
+* Etc...
+
+`responsive-gamepad` Plugins should follow the [rollup plugin conventions](https://rollupjs.org/guide/en#conventions):
+
+* Plugins should have a clear name with `responsive-gamepad-plugin-` prefix.
+
+* Include `rollup-plugin` keyword in package.json.
+
+* Document your plugin in English.
+
+## How to build plugins
+
+**For and example, see the demo [ExamplePlugin](./demo/examplePlugin.js).**
+
+Plugins are simply functions that return an object. See the following example, for what functions the return object could have:
+
+```
+export default function ReadmePlugin() {
+  return {
+    onAddPlugin: () => {
+      // Called when the plugin is added with: 'ResponsiveGamepad.addPlugin()'
+    },
+    onGetState: (CurrentResponsiveGamepadState) => {
+      // Called whenever 'ResponsiveGamepad.getState()' is called.
+      return CurrentResponsiveGamepadState
+    }
+  }
+}
+```
+
+## Featured Plugins
+
+*Open a PR to have your plugin featured here!*
 
 # Contributing
 
@@ -190,34 +192,14 @@ Just your standard node app. Install Node with [nvm](https://github.com/creation
 ### CLI Commands / Npm Scripts
 
 ```bash
-# Command to serve the project, and watch the debugger, wasm, and lib for changes
-# Uses concurrently: https://github.com/kimmobrunfeldt/concurrently
-# Concurrently helps cleanup the output and organizes all three watchers/servers
+# Command to serve the demo/lib and watch for changes (No livereload)
 npm start
 
 # Alias for npm start
 npm run dev
 
-# Serve the demo (index.js)
-npm run demo
-
-# Serve the demo and watch for changes
-npm run demo:serve
-
-# Alias for npm run demo:serve
-npm run demo:watch
-
-# Build the demo
-npm run demo:build
-
-# Build and serve the demo
-npm run demo:build:serve
-
-# Watch for changes and build the library source (/lib)
-npm run lib:watch
-
-# Build the library souce
-npm run lib:build
+# Build the library and demo souce
+npm run build
 ```
 
 # LICENSE

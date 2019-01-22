@@ -7,6 +7,5 @@ node_js:
 install:
   - npm install
 script:
-  - npm run lib:build
-  - npm run demo:build
+  - npm run build
 
