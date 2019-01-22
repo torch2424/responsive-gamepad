@@ -6,11 +6,11 @@
 export default function ResponsivGamepadExamplePlugin () => {
   return {
     onAddPlugin: () => {
-      // Function called when the plguin is added
+      // Function called when the plugin is added
     },
     onGetState: () => {
       // Function called whenever the state is being
-      // created for setInterval, or getState
+      // created for ResponsiveGamepad.getState
     }
   }
 };

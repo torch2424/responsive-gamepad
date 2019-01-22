@@ -5,6 +5,7 @@ import serve from 'rollup-plugin-serve';
 import bundleSize from 'rollup-plugin-bundle-size';
 import postcss from 'rollup-plugin-postcss';
 import postcssImport from 'postcss-import';
+import compiler from '@ampproject/rollup-plugin-closure-compiler';
 import pkg from './package.json';
 
 const fs = require('fs');
@@ -48,11 +49,6 @@ if (process.env.ROLLUP_WATCH) {
   ]
 }
 
-plugins = [
-  ...plugins,
-  bundleSize()
-];
-
 writeIndexHtmlToBuild('index.iife.js');
 
 export default [
@@ -78,6 +74,20 @@ export default [
         name: 'ResponsiveGamepad'
       }
 		],
+    plugins : [
+      ...plugins,
+      compiler(),
+      bundleSize()
+    ]
+  },
+  {
+    input: 'lib/index.js',
+    output: [
+      { 
+        file: pkg.main, 
+        format: 'cjs' 
+      }
+    ],
     plugins
   },
   {

@@ -153,7 +153,7 @@ const INPUT_HTML_TAGS = ['input', 'textarea', 'button', 'select', 'option', 'opt
 // https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/getModifierState
 
 const MODIFIER_KEYS = ["Alt", "Control", "Meta", "OS"];
-class Keyboard extends InputSource {
+class KeyboardInputSource extends InputSource {
   constructor() {
     super(); // Create our keymap to our inputs
 
@@ -279,7 +279,7 @@ class Keyboard extends InputSource {
 
 }
 
-class Gamepad extends InputSource {
+class GamepadInputSource extends InputSource {
   constructor() {
     super();
     this.gamepadAnalogStickDeadZone = 0.25;
@@ -308,7 +308,7 @@ class Gamepad extends InputSource {
     Object.keys(this.keymap).forEach(input => {
       if (this.keymap[input].buttons) {
         this.keymap[input].value = this.keymap[input].buttons.some(button => this._isButtonPressed(gamepad, button));
-      } else if (this.keymap[input].axes) {
+      } else if (this.keymap[input].axis) {
         let value = this._getAnalogStickAxis(gamepad, this.keymap[input].axis);
 
         this.keymap[input].value = value;
@@ -699,7 +699,7 @@ const ANALOG_TYPES = {
   LEFT: 'LEFT',
   RIGHT: 'RIGHT'
 };
-class TouchInput extends InputSource {
+class TouchInputInputSource extends InputSource {
   constructor() {
     super();
     this.enabled = false; // Organize our element maps to specific input types
@@ -839,9 +839,9 @@ class ResponsiveGamepadService {
     this._enabled = false;
     this._multipleDirectionInput = true; // Our Input Sources
 
-    this.Keyboard = new Keyboard();
-    this.Gamepad = new Gamepad();
-    this.TouchInput = new TouchInput();
+    this.Keyboard = new KeyboardInputSource();
+    this.Gamepad = new GamepadInputSource();
+    this.TouchInput = new TouchInputInputSource();
     setDefaultKeymap(this); // Our Plugins
 
     this.plugins = []; // On Input Change
@@ -899,6 +899,10 @@ class ResponsiveGamepadService {
   }
 
   getState() {
+    if (!this._enabled) {
+      return {};
+    }
+
     let state = _objectSpread({}, RESPONSIVE_GAMEPAD_INPUTS);
 
     const gamepadState = this.Gamepad.getState();
