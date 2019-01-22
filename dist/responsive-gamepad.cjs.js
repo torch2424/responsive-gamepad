@@ -383,6 +383,193 @@ class Gamepad extends InputSource {
 
 }
 
+// Base class for all touch input types
+const touchEvents = ["touchstart", "touchmove", "touchend", "mousedown", "mousemove", "mouseup", "mouseleave"];
+class TouchInputType {
+  constructor(element) {
+    if (!element) {
+      throw new Error('Touch inputs require an element.');
+      return;
+    } // Listeners for events we are waiting for
+
+
+    this.listeners = [];
+    this.element = element;
+
+    this._addTouchStyles();
+
+    this.boundingClientRect = undefined;
+
+    this._updateElementBoundingClientRect();
+
+    this.boundUpdateElementRect = this._updateElementBoundingClientRect.bind(this);
+    this.boundTouchEvent = this._touchEvent.bind(this);
+  }
+
+  remove() {
+    this._removeTouchStyles();
+
+    this.stopListening();
+    this.element = undefined;
+  }
+
+  listen() {
+    if (!this.element) {
+      throw new Error('You must supply an element first with add()');
+      return;
+    }
+
+    window.addEventListener("resize", this.boundUpdateElementRect);
+    touchEvents.forEach(touchEvent => {
+      this.element.addEventListener(touchEvent, this.boundTouchEvent);
+    });
+  }
+
+  stopListening() {
+    if (!this.element) {
+      throw new Error('You must supply an element first with add()');
+      return;
+    }
+
+    window.removeEventListener("resize", this.boundUpdateElementRect);
+    touchEvents.forEach(touchEvent => {
+      this.element.removeEventListener(touchEvent, this.boundTouchEvent);
+    });
+  }
+
+  onTouchEvent() {
+    throw new Error('TouchInput: This must be overriden.');
+  }
+
+  _touchEvent(event) {
+    if (!event || event.type.includes('touch') && !event.touches) return;
+    event.preventDefault(); // Determine if it is an active event (Input is pressed down)
+    // or not active (Input is released)
+
+    const isActiveEvent = event.type === "touchstart" || event.type === "touchmove" || event.type === "mousedown";
+    const isNeutralEvent = event.type === "mousemove";
+    const isInactiveEvent = !isActiveEvent && !isNeutralEvent;
+
+    this._updateTouchStyles(isActiveEvent, isNeutralEvent, isInactiveEvent);
+
+    this.onTouchEvent(event, isActiveEvent, isNeutralEvent, isInactiveEvent);
+  }
+
+  _updateElementBoundingClientRect() {
+    // Read from the DOM, and get each of our elements position, doing this here, as it is best to read from the dom in sequence
+    // use element.getBoundingRect() top, bottom, left, right to get clientX and clientY in touch events :)
+    // https://stackoverflow.com/questions/442404/retrieve-the-position-x-y-of-an-html-element
+    this.boundingClientRect = this.element.getBoundingClientRect();
+  }
+
+  _addTouchStyles() {
+    // Add some styles to stop common UX errors
+    // Like selecting text on the element;
+    this.element.style.userSelect = 'none';
+  }
+
+  _removeTouchStyles() {
+    this.element.style.userSelect = '';
+  }
+
+  _updateTouchStyles(isActiveEvent, isNeutralEvent) {
+    if (isNeutralEvent) {
+      return;
+    } // Add classes to show if the input is active or not
+
+
+    if (isActiveEvent) {
+      this.element.classList.add('active');
+    } else {
+      this.element.classList.remove('active');
+    }
+  }
+
+}
+
+class TouchButton extends TouchInputType {
+  constructor(element, input) {
+    super(element);
+    this.active = false;
+    this.input = input;
+  }
+
+  onTouchEvent(event, isActiveEvent, isNeutralEvent, isInactiveEvent) {
+    if (this.active && isInactiveEvent) {
+      this.active = false;
+    } else if (!this.active && isActiveEvent) {
+      this.active = true;
+    }
+  }
+
+}
+
+class TouchInput extends InputSource {
+  constructor() {
+    super();
+    this.enabled = false; // Organize our element maps to specific input types
+
+    this.dpads = [];
+    this.analogs = [];
+    this.buttons = [];
+  }
+
+  enable() {
+    if (typeof window === "undefined") {
+      throw new Error('TouchInput can only be used with a browser environment');
+      return;
+    }
+
+    this.enabled = true;
+    this.dpads.forEach(dpad => dpad.listen());
+    this.analogs.forEach(analog => analog.listen());
+    this.buttons.forEach(button => button.listen());
+  }
+
+  disable() {
+    if (typeof window === "undefined") {
+      throw new Error('TouchInput can only be used with a browser environment');
+      return;
+    }
+
+    this.enabled = false;
+    this.dpads.forEach(dpad => dpad.stopListening());
+    this.analogs.forEach(analog => analog.stopListening());
+    this.buttons.forEach(button => button.stopListening());
+  }
+
+  getState() {
+    const state = _objectSpread({}, RESPONSIVE_GAMEPAD_INPUTS);
+
+    this.buttons.forEach(button => {
+      state[button.input] = button.active;
+    }); // Remove any remainig strings I may have
+
+    Object.keys(state).forEach(stateKey => {
+      if (typeof state[stateKey] === 'string') {
+        delete state[stateKey];
+      }
+    });
+    return state;
+  }
+
+  addButtonInput(element, input) {
+    const touchButton = new TouchButton(element, input);
+
+    if (this.enabled) {
+      touchButton.listen();
+    }
+
+    this.buttons.push(touchButton); // Return a function to remove
+
+    return () => {
+      touchButton.stopListening();
+      this.buttons.splice(this.buttons.indexOf(touchButton), 1);
+    };
+  }
+
+}
+
 class ResponsiveGamepadService {
   constructor() {
     // Expose our constants
@@ -393,6 +580,7 @@ class ResponsiveGamepadService {
 
     this.Keyboard = new Keyboard();
     this.Gamepad = new Gamepad();
+    this.TouchInput = new TouchInput();
     setDefaultKeymap(this); // Our Plugins
 
     this.plugins = []; // On Input Change
@@ -405,6 +593,8 @@ class ResponsiveGamepadService {
   enable() {
     // Enable Input Sources
     this.Keyboard.enable();
+    this.Gamepad.enable();
+    this.TouchInput.enable();
 
     if (Object.keys(this.inputChangeMap).length > 0) {
       this._startInputChangeInterval();
@@ -415,7 +605,9 @@ class ResponsiveGamepadService {
 
   disable() {
     // Disable Input Sources
-    this.Keyboard.disable(); // Stop our InputChange Interval
+    this.Keyboard.disable();
+    this.Gamepad.disable();
+    this.TouchInput.disable(); // Stop our InputChange Interval
 
     if (this.cancelInputChangeListener) {
       this.cancelInputChangeListener();
@@ -457,10 +649,11 @@ class ResponsiveGamepadService {
     let state = _objectSpread({}, RESPONSIVE_GAMEPAD_INPUTS);
 
     const gamepadState = this.Gamepad.getState();
+    const touchInputState = this.TouchInput.getState();
     const keyboardState = this.Keyboard.getState();
     state = _objectSpread({}, RESPONSIVE_GAMEPAD_INPUTS);
     Object.keys(state).forEach(stateKey => {
-      state[stateKey] = gamepadState[stateKey] || keyboardState[stateKey];
+      state[stateKey] = gamepadState[stateKey] || touchInputState[stateKey] || keyboardState[stateKey];
     }); // Force Axis to be a number
 
     const Axes = [RESPONSIVE_GAMEPAD_INPUTS.LEFT_ANALOG_HORIZONTAL_AXIS, RESPONSIVE_GAMEPAD_INPUTS.LEFT_ANALOG_VERTICAL_AXIS, RESPONSIVE_GAMEPAD_INPUTS.RIGHT_ANALOG_HORIZONTAL_AXIS, RESPONSIVE_GAMEPAD_INPUTS.RIGHT_ANALOG_VERTICAL_AXIS];

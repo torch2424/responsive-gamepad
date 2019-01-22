@@ -1,4 +1,5 @@
 import {Component, h} from 'preact';
+import {ResponsiveGamepad} from '../dist/responsive-gamepad.esm';
 
 import CircleButton from './circleButton';
 import DashButton from './dashButton';
@@ -6,6 +7,26 @@ import Dpad from './dpad';
 import Analog from './analog';
 
 export default class Touchpad extends Component {
+
+  componentDidMount() {
+    ResponsiveGamepad.TouchInput.addButtonInput(
+      document.getElementById('select'),
+      ResponsiveGamepad.RESPONSIVE_GAMEPAD_INPUTS.SELECT
+    );
+    ResponsiveGamepad.TouchInput.addButtonInput(
+      document.getElementById('start'),
+      ResponsiveGamepad.RESPONSIVE_GAMEPAD_INPUTS.START
+    );
+    ResponsiveGamepad.TouchInput.addButtonInput(
+      document.getElementById('a-button'),
+      ResponsiveGamepad.RESPONSIVE_GAMEPAD_INPUTS.A
+    );
+    ResponsiveGamepad.TouchInput.addButtonInput(
+      document.getElementById('b-button'),
+      ResponsiveGamepad.RESPONSIVE_GAMEPAD_INPUTS.B
+    );
+  }
+  
   render() {
     return (
       <div class="touchpad">
