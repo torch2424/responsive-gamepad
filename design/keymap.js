@@ -18,7 +18,7 @@ ResponsiveGamepad.Gamepad.setGamepadButtonsToResponsiveGamepadInput(
   RESPONSIVE_GAMEPAD_INPUTS.DPAD_UP
 );
 
-ResponsiveGamepad.Gamepad.setGamepadAxesToResponsiveGamepadInput(
+ResponsiveGamepad.Gamepad.setGamepadAxisToResponsiveGamepadInput(
   [0],
   RESPONSIVE_GAMEPAD_INPUTS.LEFT_ANALOG_HORIZONTAL_AXIS
 );

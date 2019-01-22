@@ -89,11 +89,11 @@ function setDefaultKeymap(ResponsiveGamepad) {
   ResponsiveGamepad.Keyboard.setKeysToResponsiveGamepadInput(["KeyJ"], RESPONSIVE_GAMEPAD_INPUTS.RIGHT_ANALOG_LEFT);
   ResponsiveGamepad.Gamepad.setGamepadButtonsToResponsiveGamepadInput([14], RESPONSIVE_GAMEPAD_INPUTS.DPAD_LEFT); // Left Analog Axis
 
-  ResponsiveGamepad.Gamepad.setGamepadAxesToResponsiveGamepadInput([0], RESPONSIVE_GAMEPAD_INPUTS.LEFT_ANALOG_HORIZONTAL_AXIS);
-  ResponsiveGamepad.Gamepad.setGamepadAxesToResponsiveGamepadInput([1], RESPONSIVE_GAMEPAD_INPUTS.LEFT_ANALOG_VERTICAL_AXIS); // Right Analog Axis
+  ResponsiveGamepad.Gamepad.setGamepadAxisToResponsiveGamepadInput([0], RESPONSIVE_GAMEPAD_INPUTS.LEFT_ANALOG_HORIZONTAL_AXIS);
+  ResponsiveGamepad.Gamepad.setGamepadAxisToResponsiveGamepadInput([1], RESPONSIVE_GAMEPAD_INPUTS.LEFT_ANALOG_VERTICAL_AXIS); // Right Analog Axis
 
-  ResponsiveGamepad.Gamepad.setGamepadAxesToResponsiveGamepadInput([2], RESPONSIVE_GAMEPAD_INPUTS.RIGHT_ANALOG_HORIZONTAL_AXIS);
-  ResponsiveGamepad.Gamepad.setGamepadAxesToResponsiveGamepadInput([3], RESPONSIVE_GAMEPAD_INPUTS.RIGHT_ANALOG_VERTICAL_AXIS); // A
+  ResponsiveGamepad.Gamepad.setGamepadAxisToResponsiveGamepadInput([2], RESPONSIVE_GAMEPAD_INPUTS.RIGHT_ANALOG_HORIZONTAL_AXIS);
+  ResponsiveGamepad.Gamepad.setGamepadAxisToResponsiveGamepadInput([3], RESPONSIVE_GAMEPAD_INPUTS.RIGHT_ANALOG_VERTICAL_AXIS); // A
 
   ResponsiveGamepad.Keyboard.setKeysToResponsiveGamepadInput(["KeyX", "Semicolon", "Numpad7"], RESPONSIVE_GAMEPAD_INPUTS.A);
   ResponsiveGamepad.Gamepad.setGamepadButtonsToResponsiveGamepadInput([0], RESPONSIVE_GAMEPAD_INPUTS.A); // B
@@ -291,27 +291,30 @@ class Gamepad extends InputSource {
   disable() {}
 
   getState(gamepadIndex) {
-    const gamepads = this._getGamepads();
+    const gamepads = this._getGamepads(); // Check our gamepadIndex
 
-    for (let i = 0; i < gamepads.length; i++) {
-      // Get our current gamepad
-      let gamepad = gamepads[i];
 
-      if (!gamepad) {
-        continue;
-      }
+    if (!gamepadIndex) {
+      gamepadIndex = 0;
+    } // Get our current gamepad
 
-      Object.keys(this.keymap).forEach(input => {
-        if (this.keymap[input].buttons) {
-          this.keymap[input].value = this.keymap[input].buttons.some(button => this._isButtonPressed(gamepad, button));
-        } else if (this.keymap[input].axes) {
-          // TODO: Truly support multiple axes by averaging.
-          let value = this._getAnalogStickAxis(gamepad, this.keymap[input].axes[0]);
 
-          this.keymap[input].value = value;
-        }
-      });
+    let gamepad = gamepads[gamepadIndex];
+
+    if (!gamepad) {
+      return false;
     }
+
+    Object.keys(this.keymap).forEach(input => {
+      if (this.keymap[input].buttons) {
+        this.keymap[input].value = this.keymap[input].buttons.some(button => this._isButtonPressed(gamepad, button));
+      } else if (this.keymap[input].axes) {
+        // TODO: Truly support multiple axes by averaging.
+        let value = this._getAnalogStickAxis(gamepad, this.keymap[input].axis);
+
+        this.keymap[input].value = value;
+      }
+    });
 
     const state = _objectSpread({}, RESPONSIVE_GAMEPAD_INPUTS);
 
@@ -349,17 +352,17 @@ class Gamepad extends InputSource {
     this.keymap[responsiveGamepadInput].buttons = buttons;
   }
 
-  setGamepadAxesToResponsiveGamepadInput(axes, responsiveGamepadInput) {
-    if (!axes || !responsiveGamepadInput || axes.length === 0) {
+  setGamepadAxisToResponsiveGamepadInput(axis, responsiveGamepadInput) {
+    if (axis === undefined || !responsiveGamepadInput) {
       throw new Error('Could not set the specificed buttons to input');
     }
 
     if (typeof axes === 'number') {
-      axes = [axes];
+      throw new Error('Must pass in an axis id');
     }
 
     this.keymap[responsiveGamepadInput] = {};
-    this.keymap[responsiveGamepadInput].axes = axes;
+    this.keymap[responsiveGamepadInput].axis = axis;
   }
 
   _isButtonPressed(gamepad, buttonId) {
@@ -575,26 +578,34 @@ class TouchDpad extends TouchInputType {
     const isHorizontal = Math.abs(rectCenterX - touchX) + horizontalInfluence > Math.abs(rectCenterY - touchY); // Find if left or right from width, vice versa for height
 
     if (isHorizontal) {
-      // Add a horizontal dead zone
-      const deadzoneSize = this.boundingClientRect.width / 20;
-
-      if (Math.abs(this.boundingClientRect.width / 2 - touchX) > deadzoneSize) {
-        const isLeft = touchX < this.boundingClientRect.width / 2;
-
-        if (isLeft) {
-          this.state.DPAD_LEFT = true;
-        } else {
-          this.state.DPAD_RIGHT = true;
-        }
-      }
+      this.setHorizontalState(touchX);
     } else {
-      const isUp = touchY < this.boundingClientRect.height / 2;
+      this.setVerticalState(touchY);
+    }
+  }
 
-      if (isUp) {
-        this.state.DPAD_UP = true;
+  setHorizontalState(touchX) {
+    // Add a horizontal dead zone
+    const deadzoneSize = this.boundingClientRect.width / 20;
+
+    if (Math.abs(this.boundingClientRect.width / 2 - touchX) > deadzoneSize) {
+      const isLeft = touchX < this.boundingClientRect.width / 2;
+
+      if (isLeft) {
+        this.state.DPAD_LEFT = true;
       } else {
-        this.state.DPAD_DOWN = true;
+        this.state.DPAD_RIGHT = true;
       }
+    }
+  }
+
+  setVerticalState(touchY) {
+    const isUp = touchY < this.boundingClientRect.height / 2;
+
+    if (isUp) {
+      this.state.DPAD_UP = true;
+    } else {
+      this.state.DPAD_DOWN = true;
     }
   }
 
@@ -603,6 +614,61 @@ class TouchDpad extends TouchInputType {
 class TouchAnalog extends TouchInputType {
   constructor(element) {
     super(element);
+
+    this._resetState();
+  }
+
+  _resetState() {
+    this.state = {
+      HORIZONTAL_AXIS: 0,
+      VERTICAL_AXIS: 0
+    };
+    this.element.style.transform = `translate(0px, 0px)`;
+  }
+
+  onTouchEvent(event) {
+    // If we are not in the active state,
+    // simply reset and return
+    if (!this.active) {
+      this._resetState();
+
+      return;
+    } // Get our directional values
+
+
+    const {
+      rectCenterX,
+      rectCenterY,
+      touchX,
+      touchY
+    } = getDirectionalTouch(event, this.boundingClientRect); // Find our Horizontal Axis
+
+    const horizontalDifferenceFromCenter = touchX - rectCenterX;
+    let horizontalAxis = horizontalDifferenceFromCenter / rectCenterX;
+
+    if (horizontalAxis > 1) {
+      horizontalAxis = 1.0;
+    } else if (horizontalAxis < -1) {
+      horizontalAxis = -1.0;
+    } // Find our Vertical Axis
+
+
+    const verticalDifferenceFromCenter = touchY - rectCenterY;
+    let verticalAxis = verticalDifferenceFromCenter / rectCenterY;
+
+    if (verticalAxis > 1) {
+      verticalAxis = 1.0;
+    } else if (verticalAxis < -1) {
+      verticalAxis = -1.0;
+    } // Apply styles to element
+
+
+    const translateX = rectCenterX * horizontalAxis / 2;
+    const translateY = rectCenterY * verticalAxis / 2;
+    this.element.style.transform = `translate(${translateX}px, ${translateY}px)`; // Set Axis on keyMap
+
+    this.state.HORIZONTAL_AXIS = horizontalAxis;
+    this.state.VERTICAL_AXIS = verticalAxis;
   }
 
 }
@@ -666,7 +732,18 @@ class TouchInput extends InputSource {
       Object.keys(dpad.state).forEach(stateKey => {
         state[stateKey] = dpad.state[stateKey] || state[stateKey];
       });
-    }); // Remove any remainig strings I may have
+    });
+
+    if (this.leftAnalogs.length > 0) {
+      state.LEFT_ANALOG_HORIZONTAL_AXIS = this.leftAnalogs[0].state.HORIZONTAL_AXIS;
+      state.LEFT_ANALOG_VERTICAL_AXIS = this.leftAnalogs[0].state.VERTICAL_AXIS;
+    }
+
+    if (this.rightAnalogs.length > 0) {
+      state.RIGHT_ANALOG_HORIZONTAL_AXIS = this.rightAnalogs[0].state.HORIZONTAL_AXIS;
+      state.RIGHT_ANALOG_VERTICAL_AXIS = this.rightAnalogs[0].state.VERTICAL_AXIS;
+    } // Remove any remainig strings I may have
+
 
     Object.keys(state).forEach(stateKey => {
       if (typeof state[stateKey] === 'string') {
@@ -725,14 +802,14 @@ class TouchInput extends InputSource {
       this.leftAnalogs.push(touchAnalog); // Return a function to remove
 
       return () => {
-        touchDpad.stopListening();
+        touchAnalog.stopListening();
         this.leftAnalogs.splice(this.leftAnalogs.indexOf(touchAnalog), 1);
       };
     } else {
       this.rightAnalogs.push(touchAnalog); // Return a function to remove
 
       return () => {
-        touchDpad.stopListening();
+        touchAnalog.stopListening();
         this.rightAnalogs.splice(this.rightAnalogs.indexOf(touchAnalog), 1);
       };
     }

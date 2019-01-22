@@ -11,7 +11,7 @@ export default class Touchpad extends Component {
   componentDidMount() {
 
     ResponsiveGamepad.TouchInput.addLeftAnalogInput(
-      document.getElementById('left-analog')
+      document.querySelector('#left-analog .analog-stick')
     );
 
     ResponsiveGamepad.TouchInput.addDpadInput(
