@@ -400,8 +400,11 @@ class TouchInputType {
 
     this.boundingClientRect = undefined;
 
-    this._updateElementBoundingClientRect();
+    this._updateElementBoundingClientRect(); // Whether or not the current input is "active"
+    // E.g a mouse down event has occurded, but no mouse up
 
+
+    this.active = false;
     this.boundUpdateElementRect = this._updateElementBoundingClientRect.bind(this);
     this.boundTouchEvent = this._touchEvent.bind(this);
   }
@@ -437,10 +440,6 @@ class TouchInputType {
     });
   }
 
-  onTouchEvent() {
-    throw new Error('TouchInput: This must be overriden.');
-  }
-
   _touchEvent(event) {
     if (!event || event.type.includes('touch') && !event.touches) return;
     event.preventDefault(); // Determine if it is an active event (Input is pressed down)
@@ -450,9 +449,13 @@ class TouchInputType {
     const isNeutralEvent = event.type === "mousemove";
     const isInactiveEvent = !isActiveEvent && !isNeutralEvent;
 
+    this._updateActiveStatus(isActiveEvent, isInactiveEvent);
+
     this._updateTouchStyles(isActiveEvent, isNeutralEvent, isInactiveEvent);
 
-    this.onTouchEvent(event, isActiveEvent, isNeutralEvent, isInactiveEvent);
+    if (this.onTouchEvent) {
+      this.onTouchEvent(event, isActiveEvent, isNeutralEvent, isInactiveEvent);
+    }
   }
 
   _updateElementBoundingClientRect() {
@@ -485,16 +488,7 @@ class TouchInputType {
     }
   }
 
-}
-
-class TouchButton extends TouchInputType {
-  constructor(element, input) {
-    super(element);
-    this.active = false;
-    this.input = input;
-  }
-
-  onTouchEvent(event, isActiveEvent, isNeutralEvent, isInactiveEvent) {
+  _updateActiveStatus(isActiveEvent, isInactiveEvent) {
     if (this.active && isInactiveEvent) {
       this.active = false;
     } else if (!this.active && isActiveEvent) {
@@ -504,13 +498,135 @@ class TouchButton extends TouchInputType {
 
 }
 
+function getDirectionalTouch(event, boundingClientRect) {
+  // We will need these  calculations for when if we are dpad or analog
+  // Calculate for the correct key
+  // Only using the first touch, since we shouldn't be having two fingers on the dpad
+  let touch;
+
+  if (event.type.includes('touch')) {
+    touch = event.touches[0];
+  } else if (event.type.includes('mouse')) {
+    touch = event;
+  } // We will need these  calculations for when if we are dpad or analog
+  // Find our centers of our rectangles, and our unbiased X Y values on the rect
+
+
+  const rectCenterX = (boundingClientRect.right - boundingClientRect.left) / 2;
+  const rectCenterY = (boundingClientRect.bottom - boundingClientRect.top) / 2;
+  const touchX = touch.clientX - boundingClientRect.left;
+  const touchY = touch.clientY - boundingClientRect.top;
+  return {
+    rectCenterX,
+    rectCenterY,
+    touchX,
+    touchY
+  };
+}
+
+class TouchDpad extends TouchInputType {
+  constructor(element) {
+    super(element);
+
+    this._resetState();
+  }
+
+  _resetState() {
+    this.state = {
+      DPAD_UP: false,
+      DPAD_RIGHT: false,
+      DPAD_DOWN: false,
+      DPAD_LEFT: false
+    };
+  }
+
+  onTouchEvent(event) {
+    // If we are not in the active state,
+    // simply reset and return
+    if (!this.active) {
+      this._resetState();
+
+      return;
+    } // Get our directional values
+
+
+    const {
+      rectCenterX,
+      rectCenterY,
+      touchX,
+      touchY
+    } = getDirectionalTouch(event, this.boundingClientRect); // Find if the horizontal or vertical influence is greater
+    // Lesson From: picoDeploy
+    // Fix for shoot button causing the character to move right on multi touch error
+    // + 50 for some buffer
+
+    if (touchX > rectCenterX + this.boundingClientRect.width / 2 + 50) {
+      // Ignore the event
+      return;
+    } // We forsure know we have input
+    // Reset previous DPAD State
+
+
+    this._resetState(); // Create an additonal influece for horizontal, to make it feel better
+
+
+    const horizontalInfluence = this.boundingClientRect.width / 8; // Determine if we are horizontal or vertical
+
+    const isHorizontal = Math.abs(rectCenterX - touchX) + horizontalInfluence > Math.abs(rectCenterY - touchY); // Find if left or right from width, vice versa for height
+
+    if (isHorizontal) {
+      // Add a horizontal dead zone
+      const deadzoneSize = this.boundingClientRect.width / 20;
+
+      if (Math.abs(this.boundingClientRect.width / 2 - touchX) > deadzoneSize) {
+        const isLeft = touchX < this.boundingClientRect.width / 2;
+
+        if (isLeft) {
+          this.state.DPAD_LEFT = true;
+        } else {
+          this.state.DPAD_RIGHT = true;
+        }
+      }
+    } else {
+      const isUp = touchY < this.boundingClientRect.height / 2;
+
+      if (isUp) {
+        this.state.DPAD_UP = true;
+      } else {
+        this.state.DPAD_DOWN = true;
+      }
+    }
+  }
+
+}
+
+class TouchAnalog extends TouchInputType {
+  constructor(element) {
+    super(element);
+  }
+
+}
+
+class TouchButton extends TouchInputType {
+  constructor(element, input) {
+    super(element);
+    this.input = input;
+  }
+
+}
+
+const ANALOG_TYPES = {
+  LEFT: 'LEFT',
+  RIGHT: 'RIGHT'
+};
 class TouchInput extends InputSource {
   constructor() {
     super();
     this.enabled = false; // Organize our element maps to specific input types
 
     this.dpads = [];
-    this.analogs = [];
+    this.leftAnalogs = [];
+    this.rightAnalogs = [];
     this.buttons = [];
   }
 
@@ -522,7 +638,8 @@ class TouchInput extends InputSource {
 
     this.enabled = true;
     this.dpads.forEach(dpad => dpad.listen());
-    this.analogs.forEach(analog => analog.listen());
+    this.leftAnalogs.forEach(analog => analog.listen());
+    this.rightAnalogs.forEach(analog => analog.listen());
     this.buttons.forEach(button => button.listen());
   }
 
@@ -534,7 +651,8 @@ class TouchInput extends InputSource {
 
     this.enabled = false;
     this.dpads.forEach(dpad => dpad.stopListening());
-    this.analogs.forEach(analog => analog.stopListening());
+    this.leftAnalogs.forEach(analog => analog.stopListening());
+    this.rightAnalogs.forEach(analog => analog.stopListening());
     this.buttons.forEach(button => button.stopListening());
   }
 
@@ -543,6 +661,11 @@ class TouchInput extends InputSource {
 
     this.buttons.forEach(button => {
       state[button.input] = button.active;
+    });
+    this.dpads.forEach(dpad => {
+      Object.keys(dpad.state).forEach(stateKey => {
+        state[stateKey] = dpad.state[stateKey] || state[stateKey];
+      });
     }); // Remove any remainig strings I may have
 
     Object.keys(state).forEach(stateKey => {
@@ -566,6 +689,53 @@ class TouchInput extends InputSource {
       touchButton.stopListening();
       this.buttons.splice(this.buttons.indexOf(touchButton), 1);
     };
+  }
+
+  addDpadInput(element) {
+    const touchDpad = new TouchDpad(element);
+
+    if (this.enabled) {
+      touchDpad.listen();
+    }
+
+    this.dpads.push(touchDpad); // Return a function to remove
+
+    return () => {
+      touchDpad.stopListening();
+      this.dpads.splice(this.dpads.indexOf(touchDpad), 1);
+    };
+  }
+
+  addLeftAnalogInput(element) {
+    this.addAnalogInput(element, ANALOG_TYPES.LEFT);
+  }
+
+  addRightAnalogInput(element) {
+    this.addAnalogInput(element, ANALOG_TYPES.RIGHT);
+  }
+
+  addAnalogInput(element, analogType) {
+    const touchAnalog = new TouchAnalog(element);
+
+    if (this.enabled) {
+      touchAnalog.listen();
+    }
+
+    if (analogType === ANALOG_TYPES.LEFT) {
+      this.leftAnalogs.push(touchAnalog); // Return a function to remove
+
+      return () => {
+        touchDpad.stopListening();
+        this.leftAnalogs.splice(this.leftAnalogs.indexOf(touchAnalog), 1);
+      };
+    } else {
+      this.rightAnalogs.push(touchAnalog); // Return a function to remove
+
+      return () => {
+        touchDpad.stopListening();
+        this.rightAnalogs.splice(this.rightAnalogs.indexOf(touchAnalog), 1);
+      };
+    }
   }
 
 }

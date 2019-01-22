@@ -9,6 +9,15 @@ import Analog from './analog';
 export default class Touchpad extends Component {
 
   componentDidMount() {
+
+    ResponsiveGamepad.TouchInput.addLeftAnalogInput(
+      document.getElementById('left-analog')
+    );
+
+    ResponsiveGamepad.TouchInput.addDpadInput(
+      document.getElementById('dpad')
+    );
+
     ResponsiveGamepad.TouchInput.addButtonInput(
       document.getElementById('select'),
       ResponsiveGamepad.RESPONSIVE_GAMEPAD_INPUTS.SELECT
