@@ -52,11 +52,65 @@ First, import the `ResponsiveGamepad` singleton service with:
 
 ## ResponsiveGamepad
 
+*Properties accessed from: `ResponsiveGamepad`.*
+
+* `getVersion()`: string - Returns the current version of the lib.
+
 * `enable()`: void - Enables `ResponsiveGamepad`, and listens for events.
 
 * `disable()`: void - Removes all listeners from ResponsiveGamepad, and stops listening.
 
 * `isEnabled()`: boolean - Returns if `ResponsiveGamepad` is currently enabled.
+
+* `addPlugin(myPlugin)`: function - Adds a plugin to be used with the lib. Returns a function to remove the added plugin.
+
+* `getState()`: ResponsiveGamepadState - Returns an object with the current state of ResponsiveGamepad. See the [Demo](https://torch2424.github.io/responsive-gamepad/) and the [Input Map](#input-map). 
+
+* `onInputsChange(ArrayOfResponsiveGamepadInputs, callback)`: function - Function to listen for changes on the array of specified `ResponsiveGamepad.RESPONSIVE_GAMEPAD_INPUTS`, and calls a callback whenever they change. Returns a function to stop listening.
+
+### Keyboard
+
+*Properties accessed from: `ResponsiveGamepad.Keyboard`.*
+
+* `enableIgnoreWhenInputElementFocused()`: void - Enables ignoring ResponsiveGamepad Keyboard input when focused on form input type elements. Enabled by default.
+
+* `disableIgnoreWhenInputElementFocused()`: void - Disables the above.
+
+* `enableIgnoreWhenModifierState()`: void - Enables ignoring ResponsiveGamepad Keyboard input when a [Modifier](./lib/keyboard/keyboard.js) key is pressed. See [KeyboardEvent.getModifierState()](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/getModifierState) for more reference. Enabled by default.
+
+* `disableIgnoreWhenModifierState()`: void - Disables the above.
+
+* `setKeysToResponsiveGamepadInput(ArrayOfKeyboardEventCodes, ResponsiveGamepadInput)`: void - Function used for modifying the input map. Takes and array of [KeyboardEvent.code](https://www.w3.org/TR/uievents-code/#code-value-tables) and a single [`ResponsiveGamepad.RESPONSIVE_GAMEPAD_INPUTS`](./lib/constants).
+
+### Gamepad
+
+*Properties accessed from: `ResponsiveGamepad.Gamepad`.*
+
+* `getState(PlayerIndex: number)`: GamepadState - Function that takes in a player index (0, 1, 2) from the connected gamepads. Returns a `ResponsiveGamepad.getState()` like Object. Can be used for multiplayer.
+
+* `setGamepadButtonsToResponsiveGamepadInput(ArrayOfGamepadButtonIds, NonAxisResponsiveGamepadInput)`: void - Function used for modifying the input map. Takes and array of [Gamepad Button Ids](https://www.w3.org/TR/gamepad/#remapping) and a single [`ResponsiveGamepad.RESPONSIVE_GAMEPAD_INPUTS`](./lib/constants).
+
+* `setGamepadAxisToResponsiveGamepadInput(GamepadAxisIds, AxisResponsiveGamepadInput)`: void - Function used for modifying the input map. Takes a single [Gamepad Axis Id](https://www.w3.org/TR/gamepad/#remapping) and a single [`ResponsiveGamepad.RESPONSIVE_GAMEPAD_INPUTS`](./lib/constants).
+
+### TouchInput
+
+*Properties accessed from: `ResponsiveGamepad.TouchInput`.*
+
+The functions that add inputs to the `ResponsiveGamepad` have additional functionality outside of what is shown below. When inputs are added, they will have styles applied to help with them being touchable. Also, When the touch input becomes active, it will add the CSS class `active` to the element.
+
+* `addButtonInput(HTMLElement, ResponsiveGamepadInput)`: void - Function that takes in a HTML Element (e.g `document.getElementById`), and a [`ResponsiveGamepad.RESPONSIVE_GAMEPAD_INPUTS`](./lib/constants). Will add the element as an interactive button for the ResponsiveGamepad.
+
+* `addDpadInput(HTMLElement, configurationObject)`: void - Function that takes in a HTML Element (e.g `document.getElementById`), and a `configurationObject`. Will add the element as an interactive dpad for the `DPAD_UP`, `DPAD_RIGHT`, `DPAD_LEFT`, and `DPAD_DOWN` inputs. The configuration object is outilined below:
+
+```
+const configurationObject = {
+  allowMultipleDirections: false // False by default. This will allow for multiple directions (diagonal) inputs.
+}
+```
+
+* `addLeftAnalogInput(HTMLElement)`: void - Function that takes in a HTML Element (e.g `document.getElementById`). Will add the element as an interactive virtual joystick for the `LEFT_ANALOG_HORIZONTAL_AXIS`, `LEFT_ANALOG_VERTICAL_AXIS`, `LEFT_ANALOG_UP`, `LEFT_ANALOG_RIGHT`, `LEFT_ANALOG_DOWN`, `LEFT_ANALOG_LEFT` inputs.
+
+* `addRightAnalogInput(HTMLElement)`: void - Function that takes in a HTML Element (e.g `document.getElementById`). Will add the element as an interactive virtual joystick for the `RIGHT_ANALOG_HORIZONTAL_AXIS`, `RIGHT_ANALOG_VERTICAL_AXIS`, `RIGHT_ANALOG_UP`, `RIGHT_ANALOG_RIGHT`, `RIGHT_ANALOG_DOWN`, `RIGHT_ANALOG_LEFT` inputs.
 
 # Input Map
 
