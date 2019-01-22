@@ -28,6 +28,7 @@ class ResponsiveGamepadDemo extends Component {
 
         <h1>Responsive Gamepad Demo</h1>
         <a href="https://github.com/torch2424/responsive-gamepad" target="_blank">Fork me on Github</a>
+        <div><b>Version</b>: {ResponsiveGamepad.getVersion()}</div>
 
         <div class="description">
           This is the example demo for responsive-gamepad.

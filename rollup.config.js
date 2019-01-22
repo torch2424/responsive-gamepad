@@ -6,6 +6,7 @@ import bundleSize from 'rollup-plugin-bundle-size';
 import postcss from 'rollup-plugin-postcss';
 import postcssImport from 'postcss-import';
 import compiler from '@ampproject/rollup-plugin-closure-compiler';
+import json from 'rollup-plugin-json';
 import pkg from './package.json';
 
 const fs = require('fs');
@@ -30,6 +31,9 @@ const babelPluginConfig = {
 };
 
 let plugins = [
+  json({
+    exclude: 'node_modules/**'
+  }),
   postcss({
     extensions: ['.css'],
     plugins: [postcssImport()]

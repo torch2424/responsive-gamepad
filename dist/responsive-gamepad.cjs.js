@@ -837,6 +837,8 @@ class TouchInputInputSource extends InputSource {
 
 }
 
+var version = "0.2.0";
+
 class ResponsiveGamepadService {
   constructor() {
     // Expose our constants
@@ -855,6 +857,10 @@ class ResponsiveGamepadService {
     this.inputChangeMap = {};
     this.inputChangeOldState = {};
     this.cancelInputChangeListener = undefined;
+  }
+
+  getVersion() {
+    return version;
   }
 
   enable() {

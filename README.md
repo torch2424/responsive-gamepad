@@ -52,6 +52,11 @@ First, import the `ResponsiveGamepad` singleton service with:
 
 ## ResponsiveGamepad
 
+* `enable()`: void - Enables `ResponsiveGamepad`, and listens for events.
+
+* `disable()`: void - Removes all listeners from ResponsiveGamepad, and stops listening.
+
+* `isEnabled()`: boolean - Returns if `ResponsiveGamepad` is currently enabled.
 
 # Input Map
 
