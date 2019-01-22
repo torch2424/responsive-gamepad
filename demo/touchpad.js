@@ -15,7 +15,10 @@ export default class Touchpad extends Component {
     );
 
     ResponsiveGamepad.TouchInput.addDpadInput(
-      document.getElementById('dpad')
+      document.getElementById('dpad'),
+      {
+        allowMultipleDirections: true
+      }
     );
 
     ResponsiveGamepad.TouchInput.addButtonInput(

@@ -577,12 +577,15 @@ class TouchDpad extends TouchInputType {
     // Reset previous DPAD State
 
 
-    this._resetState(); // Check if we are allowing multiple directions
+    this._resetState(); // Get our deadzone
 
+
+    const horizontalDeadzone = this.boundingClientRect.width / 20;
+    const verticalDeadzone = this.boundingClientRect.height / 20; // Check if we are allowing multiple directions
 
     if (this.config.allowMultipleDirections) {
-      this.setHorizontalState(touchX);
-      this.setVerticalState(touchY);
+      this.setHorizontalState(touchX, horizontalDeadzone);
+      this.setVerticalState(touchY, verticalDeadzone);
       return;
     } // Create an additonal influece for horizontal, to make it feel better
 
@@ -592,28 +595,31 @@ class TouchDpad extends TouchInputType {
     const isHorizontal = Math.abs(rectCenterX - touchX) + horizontalInfluence > Math.abs(rectCenterY - touchY); // Find if left or right from width, vice versa for height
 
     if (isHorizontal) {
-      this.setHorizontalState(touchX);
+      this.setHorizontalState(touchX, horizontalDeadzone);
     } else {
       this.setVerticalState(touchY);
     }
   }
 
-  setHorizontalState(touchX) {
-    // Add a horizontal dead zone
-    const deadzoneSize = this.boundingClientRect.width / 20;
+  setHorizontalState(touchX, deadzone) {
+    if (deadzone && Math.abs(this.boundingClientRect.width / 2 - touchX) <= deadzone) {
+      return;
+    }
 
-    if (Math.abs(this.boundingClientRect.width / 2 - touchX) > deadzoneSize) {
-      const isLeft = touchX < this.boundingClientRect.width / 2;
+    const isLeft = touchX < this.boundingClientRect.width / 2;
 
-      if (isLeft) {
-        this.state.DPAD_LEFT = true;
-      } else {
-        this.state.DPAD_RIGHT = true;
-      }
+    if (isLeft) {
+      this.state.DPAD_LEFT = true;
+    } else {
+      this.state.DPAD_RIGHT = true;
     }
   }
 
-  setVerticalState(touchY) {
+  setVerticalState(touchY, deadzone) {
+    if (deadzone && Math.abs(this.boundingClientRect.height / 2 - touchY) < deadzone) {
+      return;
+    }
+
     const isUp = touchY < this.boundingClientRect.height / 2;
 
     if (isUp) {
