@@ -1061,9 +1061,14 @@
 	  _resetState() {
 	    this.state = {
 	      HORIZONTAL_AXIS: 0,
-	      VERTICAL_AXIS: 0
+	      VERTICAL_AXIS: 0,
+	      UP: !1,
+	      RIGHT: !1,
+	      DOWN: !1,
+	      LEFT: !1
 	    };
 	    this.element.style.transform = "translate(0px, 0px)";
+	    this.deadzone = .5;
 	  }
 
 	  onTouchEvent(a) {
@@ -1081,6 +1086,12 @@
 	      this.element.style.transform = `translate(${a * c / 2}px, ${b * e / 2}px)`;
 	      this.state.HORIZONTAL_AXIS = c;
 	      this.state.VERTICAL_AXIS = e;
+	      this.state.UP = !1;
+	      this.state.RIGHT = !1;
+	      this.state.DOWN = !1;
+	      this.state.LEFT = !1;
+	      Math.abs(c) > this.deadzone && (0 < c ? this.state.RIGHT = !0 : 0 > c && (this.state.LEFT = !0));
+	      Math.abs(e) > this.deadzone && (0 < e ? this.state.DOWN = !0 : 0 > e && (this.state.UP = !0));
 	    } else this._resetState();
 	  }
 
@@ -1137,8 +1148,8 @@
 	        a[c] = b.state[c] || a[c];
 	      });
 	    });
-	    0 < this.leftAnalogs.length && (a.LEFT_ANALOG_HORIZONTAL_AXIS = this.leftAnalogs[0].state.HORIZONTAL_AXIS, a.LEFT_ANALOG_VERTICAL_AXIS = this.leftAnalogs[0].state.VERTICAL_AXIS);
-	    0 < this.rightAnalogs.length && (a.RIGHT_ANALOG_HORIZONTAL_AXIS = this.rightAnalogs[0].state.HORIZONTAL_AXIS, a.RIGHT_ANALOG_VERTICAL_AXIS = this.rightAnalogs[0].state.VERTICAL_AXIS);
+	    0 < this.leftAnalogs.length && (a.LEFT_ANALOG_HORIZONTAL_AXIS = this.leftAnalogs[0].state.HORIZONTAL_AXIS, a.LEFT_ANALOG_VERTICAL_AXIS = this.leftAnalogs[0].state.VERTICAL_AXIS, a.LEFT_ANALOG_UP = this.leftAnalogs[0].state.UP, a.LEFT_ANALOG_RIGHT = this.leftAnalogs[0].state.RIGHT, a.LEFT_ANALOG_DOWN = this.leftAnalogs[0].state.DOWN, a.LEFT_ANALOG_LEFT = this.leftAnalogs[0].state.LEFT);
+	    0 < this.rightAnalogs.length && (a.RIGHT_ANALOG_HORIZONTAL_AXIS = this.rightAnalogs[0].state.HORIZONTAL_AXIS, a.RIGHT_ANALOG_VERTICAL_AXIS = this.rightAnalogs[0].state.VERTICAL_AXIS, a.RIGHT_ANALOG_UP = this.rightAnalogs[0].state.UP, a.RIGHT_ANALOG_RIGHT = this.rightAnalogs[0].state.RIGHT, a.RIGHT_ANALOG_DOWN = this.rightAnalogs[0].state.DOWN, a.RIGHT_ANALOG_LEFT = this.rightAnalogs[0].state.LEFT);
 	    Object.keys(a).forEach(b => {
 	      "string" === typeof a[b] && delete a[b];
 	    });
@@ -1246,7 +1257,7 @@
 	  }
 
 	  getVersion() {
-	    return "1.0.0";
+	    return "1.1.0";
 	  }
 
 	  enable() {
@@ -1288,16 +1299,18 @@
 	    Object.keys(a).forEach(f => {
 	      a[f] = b[f] || c[f] || e[f];
 	    });
-	    [g.LEFT_ANALOG_HORIZONTAL_AXIS, g.LEFT_ANALOG_VERTICAL_AXIS, g.RIGHT_ANALOG_HORIZONTAL_AXIS, g.RIGHT_ANALOG_VERTICAL_AXIS].forEach((b, c) => {
-	      if ("number" !== typeof a[b]) {
-	        if (0 === c || 2 === c) a[b] = a[g.DPAD_RIGHT] ? 1 : a[g.DPAD_LEFT] ? -1 : 0;
-	        if (1 === c || 3 === c) a[b] = a[g.DPAD_UP] ? 1 : a[g.DPAD_DOWN] ? -1 : 0;
-	      }
+	    ["LEFT", "RIGHT"].forEach(b => {
+	      [g[`${b}_ANALOG_HORIZONTAL_AXIS`], g[`${b}_ANALOG_VERTICAL_AXIS`]].forEach((c, e) => {
+	        if ("number" !== typeof a[c]) {
+	          if (0 === e || 2 === e) a[c] = a[g[`${b}_ANALOG_RIGHT`]] ? 1 : a[g[`${b}_ANALOG_LEFT`]] ? -1 : 0;
+	          if (1 === e || 3 === e) a[c] = a[g[`${b}_ANALOG_UP`]] ? -1 : a[g[`${b}_ANALOG_DOWN`]] ? 1 : 0;
+	        }
+	      });
 	    });
-	    a.UP = a.DPAD_UP || a.LEFT_ANALOG_UP || a.RIGHT_ANALOG_UP;
-	    a.RIGHT = a.DPAD_RIGHT || a.LEFT_ANALOG_RIGHT || a.RIGHT_ANALOG_RIGHT;
-	    a.DOWN = a.DPAD_DOWN || a.LEFT_ANALOG_DOWN || a.RIGHT_ANALOG_DOWN;
-	    a.LEFT = a.DPAD_LEFT || a.LEFT_ANALOG_LEFT || a.RIGHT_ANALOG_LEFT;
+	    a.UP = a.DPAD_UP || a.LEFT_ANALOG_UP;
+	    a.RIGHT = a.DPAD_RIGHT || a.LEFT_ANALOG_RIGHT;
+	    a.DOWN = a.DPAD_DOWN || a.LEFT_ANALOG_DOWN;
+	    a.LEFT = a.DPAD_LEFT || a.LEFT_ANALOG_LEFT;
 	    Object.keys(a).forEach(b => {
 	      if (void 0 === a[b] || "string" === typeof a[b]) a[b] = !1;
 	    });
