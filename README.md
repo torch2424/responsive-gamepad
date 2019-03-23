@@ -85,6 +85,8 @@ First, import the `ResponsiveGamepad` singleton service with:
 
 * `onInputsChange(ArrayOfResponsiveGamepadInputs, callback)`: function - Function to listen for changes on the array of specified `ResponsiveGamepad.RESPONSIVE_GAMEPAD_INPUTS`, and calls a callback whenever they change. Returns a function to stop listening.
 
+* `clearInputMap()`: Remove all input mappings. Useful if you don't want (some of) the default input map.
+
 ### Keyboard
 
 *Properties accessed from: `ResponsiveGamepad.Keyboard`.*
