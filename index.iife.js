@@ -730,12 +730,14 @@
 	  LEFT_ANALOG_RIGHT: "LEFT_ANALOG_RIGHT",
 	  LEFT_ANALOG_DOWN: "LEFT_ANALOG_DOWN",
 	  LEFT_ANALOG_LEFT: "LEFT_ANALOG_LEFT",
+	  LEFT_ANALOG_PRESS: "LEFT_ANALOG_PRESS",
 	  RIGHT_ANALOG_HORIZONTAL_AXIS: "RIGHT_ANALOG_HORIZONTAL_AXIS",
 	  RIGHT_ANALOG_VERTICAL_AXIS: "RIGHT_ANALOG_VERTICAL_AXIS",
 	  RIGHT_ANALOG_UP: "RIGHT_ANALOG_UP",
 	  RIGHT_ANALOG_RIGHT: "RIGHT_ANALOG_RIGHT",
 	  RIGHT_ANALOG_DOWN: "RIGHT_ANALOG_DOWN",
 	  RIGHT_ANALOG_LEFT: "RIGHT_ANALOG_LEFT",
+	  RIGHT_ANALOG_PRESS: "RIGHT_ANALOG_PRESS",
 	  A: "A",
 	  B: "B",
 	  X: "X",
@@ -772,6 +774,13 @@
 	class m extends h$1 {
 	  constructor() {
 	    super();
+	    this.clearInputMap();
+	    this.enableIgnoreWhenInputElementFocused();
+	    this.enableIgnoreWhenModifierState();
+	    this._boundUpdateKeymapValues = this._updateKeymapValues.bind(this);
+	  }
+
+	  clearInputMap() {
 	    this.keymap = {};
 	    Object.keys(g).forEach(a => {
 	      this.keymap[a] = {
@@ -779,9 +788,6 @@
 	        value: void 0
 	      };
 	    });
-	    this.enableIgnoreWhenInputElementFocused();
-	    this.enableIgnoreWhenModifierState();
-	    this._boundUpdateKeymapValues = this._updateKeymapValues.bind(this);
 	  }
 
 	  enable() {
@@ -847,6 +853,10 @@
 	  constructor() {
 	    super();
 	    this.gamepadAnalogStickDeadZone = .25;
+	    this.clearInputMap();
+	  }
+
+	  clearInputMap() {
 	    this.keymap = {};
 	  }
 
@@ -1114,6 +1124,10 @@
 	  constructor() {
 	    super();
 	    this.enabled = !1;
+	    this.clearInputMap();
+	  }
+
+	  clearInputMap() {
 	    this.dpads = [];
 	    this.leftAnalogs = [];
 	    this.rightAnalogs = [];
@@ -1228,6 +1242,8 @@
 	    this.Gamepad.setGamepadAxisToResponsiveGamepadInput([1], g.LEFT_ANALOG_VERTICAL_AXIS);
 	    this.Gamepad.setGamepadAxisToResponsiveGamepadInput([2], g.RIGHT_ANALOG_HORIZONTAL_AXIS);
 	    this.Gamepad.setGamepadAxisToResponsiveGamepadInput([3], g.RIGHT_ANALOG_VERTICAL_AXIS);
+	    this.Gamepad.setGamepadButtonsToResponsiveGamepadInput([10], g.LEFT_ANALOG_PRESS);
+	    this.Gamepad.setGamepadButtonsToResponsiveGamepadInput([11], g.RIGHT_ANALOG_PRESS);
 	    this.Keyboard.setKeysToResponsiveGamepadInput(["KeyX", "Semicolon", "Numpad7"], g.A);
 	    this.Gamepad.setGamepadButtonsToResponsiveGamepadInput([0], g.A);
 	    this.Keyboard.setKeysToResponsiveGamepadInput(["KeyZ", "Escape", "Quote", "Backspace", "Numpad9"], g.B);
@@ -1256,8 +1272,14 @@
 	    this.cancelInputChangeListener = void 0;
 	  }
 
+	  clearInputMap() {
+	    this.Keyboard.clearInputMap();
+	    this.Gamepad.clearInputMap();
+	    this.TouchInput.clearInputMap();
+	  }
+
 	  getVersion() {
-	    return "1.1.0";
+	    return "1.2.0";
 	  }
 
 	  enable() {
