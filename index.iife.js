@@ -1279,7 +1279,7 @@
 	  }
 
 	  getVersion() {
-	    return "1.2.0";
+	    return "1.2.1";
 	  }
 
 	  enable() {
@@ -1348,7 +1348,7 @@
 	      codes: a,
 	      callback: b
 	    };
-	    this.cancelInputChangeListener || this._startInputChangeInterval();
+	    this._enabled && !this.cancelInputChangeListener && this._startInputChangeInterval();
 	    return () => {
 	      delete this.inputChangeMap[a];
 	    };
